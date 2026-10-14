@@ -468,13 +468,72 @@ function uploadVideoChunk_(p){
   return {complete:true,fileId:file.id,fileUrl:fileUrl,previewUrl:previewUrl,folderId:p.folderId||'',folderName:p.folderName||'',name:file.name||''};
 }
 function uploadCover_(p){
- if(!p.id)throw new Error('Primero guardá el comunicado como borrador.');if(!p.data)throw new Error('No se recibió la foto principal.');
- const root=getDriveRoot_(),folder=getOrCreateCommunicationFolder_(root,p.titulo||'Comunicado '+p.id),data=String(p.data).replace(/^data:[^;]+;base64,/,'');
- const bytes=Utilities.base64Decode(data);
- const file=folder.createFile(Utilities.newBlob(bytes,p.mimeType||'image/jpeg',p.fileName||'foto-principal.jpg'));try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW)}catch(err){}
- const sh=getSheet_(),row=findRow_(sh,p.id);if(row<0)throw new Error('No se encontró el comunicado para asociar la foto principal.');
- const url='https://drive.google.com/uc?export=view&id='+file.getId();sh.getRange(row,9).setValue(url);sh.getRange(row,16).setValue(formatDateTime_(new Date()));SpreadsheetApp.flush();invalidateEditorialCache_();
- return{url,fileId:file.getId(),driveUrl:file.getUrl(),name:file.getName(),folderName:folder.getName()};
+  if(!p.id)throw new Error('Primero guardá el comunicado como borrador.');
+  if(!p.data)throw new Error('No se recibió la foto principal.');
+  // Usa la API REST de Drive en vez de DriveApp, que devuelve "Acceso denegado".
+  const bytes=Utilities.base64Decode(String(p.data).replace(/^data:[^;]+;base64/, ''));
+  const fileName=String(p.fileName||'foto-principal.jpg'),mimeType=String(p.mimeType||'image/jpeg');
+  const folder=driveGetOrCreateCommunicationFolderRest_(p.titulo||'Comunicado '+p.id);
+  const boundary='----CentroPrensa'+Utilities.getUuid().replace(/-/g,'');
+  const metadata={name:fileName,mimeType:mimeType,parents:[folder.id]};
+  const prefix='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(metadata)+'\r\n--'+boundary+'\r\nContent-Type: '+mimeType+'\r\nContent-Transfer-Encoding: binary\r\n\r\n';
+  const suffix='\r\n--'+boundary+'--';
+  const payload=joinByteArrays_([Utilities.newBlob(prefix).getBytes(),bytes,Utilities.newBlob(suffix).getBytes()]);
+  const response=UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink',{
+    method:'post',contentType:'multipart/related; boundary='+boundary,
+    headers:{Authorization:'Bearer '+ScriptApp.getOAuthToken()},payload:payload,muteHttpExceptions:true
+  });
+  const status=response.getResponseCode();
+  if(status<200||status>=300)throw new Error('La API REST de Google Drive rechazó la foto (HTTP '+status+'): '+response.getContentText().slice(0,500));
+  const file=JSON.parse(response.getContentText());
+  if(!file.id)throw new Error('Google Drive no devolvió el ID de la foto principal.');
+  try{
+    const pr=UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(file.id)+'/permissions',{
+      method:'post',contentType:'application/json',headers:{Authorization:'Bearer '+ScriptApp.getOAuthToken()},
+      payload:JSON.stringify({type:'anyone',role:'reader'}),muteHttpExceptions:true
+    });
+    if(pr.getResponseCode()>=300)console.warn('La foto se guardó, pero no se pudo habilitar el enlace público: '+pr.getContentText().slice(0,200));
+  }catch(err){console.warn('La foto se guardó, pero no se pudo configurar el enlace público: '+String(err));}
+  const sh=getSheet_(),row=findRow_(sh,p.id);
+  if(row<0)throw new Error('La foto se guardó en Drive, pero no se encontró el comunicado para asociarla en Sheets.');
+  const url='https://drive.google.com/uc?export=view&id='+file.id;
+  sh.getRange(row,9).setValue(url);sh.getRange(row,16).setValue(formatDateTime_(new Date()));
+  SpreadsheetApp.flush();invalidateEditorialCache_();
+  return{url,fileId:file.id,driveUrl:file.webViewLink||('https://drive.google.com/file/d/'+file.id+'/view'),name:file.name||fileName,folderName:folder.name};
+}
+function driveGetOrCreateCommunicationFolderRest_(title){
+  let parentId='root';
+  if(CONFIG.driveRootFolderId){
+    try{parentId=driveRestRequest_('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(CONFIG.driveRootFolderId)+'?fields=id,name',{method:'get'}).id;}
+    catch(err){console.warn('La carpeta configurada no está disponible; se intentará Mi unidad. '+String(err));}
+  }
+  if(parentId==='root')parentId=findOrCreateFolderRest_('root','Centro de Prensa MIDES Florida').id;
+  return findOrCreateFolderRest_(parentId,safeFolderName_(title));
+}
+function findOrCreateFolderRest_(parentId,name){
+  const escaped=String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const q="'"+parentId+"' in parents and name='"+escaped+"' and mimeType='application/vnd.google-apps.folder' and trashed=false";
+  const result=driveRestRequest_('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&pageSize=100&fields=files(id,name)',{method:'get'});
+  if(result.files&&result.files.length)return result.files[0];
+  return driveRestRequest_('https://www.googleapis.com/drive/v3/files?fields=id,name',{
+    method:'post',contentType:'application/json',
+    payload:JSON.stringify({name:name,mimeType:'application/vnd.google-apps.folder',parents:[parentId]})
+  });
+}
+function driveRestRequest_(url,options){
+  options=options||{};
+  const response=UrlFetchApp.fetch(url,{method:options.method||'get',contentType:options.contentType,
+    headers:Object.assign({Authorization:'Bearer '+ScriptApp.getOAuthToken()},options.headers||{}),
+    payload:options.payload,muteHttpExceptions:true});
+  const status=response.getResponseCode(),body=response.getContentText();
+  if(status<200||status>=300)throw new Error('Drive API HTTP '+status+': '+body.slice(0,400));
+  return body?JSON.parse(body):{};
+}
+function joinByteArrays_(arrays){
+  let total=0;arrays.forEach(a=>total+=a.length);
+  const out=new Array(total);let offset=0;
+  arrays.forEach(a=>{for(let i=0;i<a.length;i++)out[offset++]=a[i];});
+  return out;
 }
 function uploadImages_(p){
   if(!p.id)throw new Error('Primero guardá el comunicado como borrador.');
