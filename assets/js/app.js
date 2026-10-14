@@ -1,9 +1,32 @@
 const grid=document.getElementById("newsGrid"),search=document.getElementById("search"),category=document.getElementById("category"),count=document.getElementById("resultCount");
 let items=[];
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
-function driveFileId(url){try{const u=new URL(url);if(!/(^|\.)drive\.google\.com$/i.test(u.hostname))return "";return u.searchParams.get("id")||((u.pathname.match(/\/file\/d\/([^/]+)/)||[])[1]||"")}catch(e){return ""}}
-function publicImageUrl(url){const id=driveFileId(url);return id?"https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1000":url}
-function cardImageError(img){const original=img.dataset.original||"",id=driveFileId(original),stage=Number(img.dataset.retry||0);if(id&&stage===0){img.dataset.retry="1";img.src="https://drive.google.com/uc?export=view&id="+encodeURIComponent(id);return}if(stage<2&&original&&img.src!==original){img.dataset.retry="2";img.src=original;return}const host=img.parentElement;if(host)host.innerHTML="<div class=\"news-image-empty\">MIDES Florida</div>"}
+function driveFileId(value){
+ const raw=String(value||"").trim();if(!raw)return "";
+ if(/^[a-zA-Z0-9_-]{20,}$/.test(raw)&&!/^https?:/i.test(raw))return raw;
+ try{const u=new URL(raw),host=u.hostname.toLowerCase();if(host==="drive.google.com"||host.endsWith(".drive.google.com")||host==="docs.google.com")return u.searchParams.get("id")||((u.pathname.match(/\/(?:file\/d|document\/d|spreadsheets\/d)\/([^/]+)/)||[])[1]||"")}catch(e){}
+ return "";
+}
+function publicImageUrl(value,variant=0){
+ const raw=String(value||"").trim();if(!raw)return "";
+ const id=driveFileId(raw);
+ if(id){const urls=["https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1200","https://drive.google.com/uc?export=view&id="+encodeURIComponent(id),"https://drive.google.com/uc?id="+encodeURIComponent(id)];return urls[Math.min(variant,urls.length-1)]}
+ return /^https?:\/\//i.test(raw)?raw:"";
+}
+function cardImageError(img){
+ const original=img.dataset.original||"",stage=Number(img.dataset.retry||0),id=driveFileId(original);
+ if(id&&stage<2){img.dataset.retry=String(stage+1);img.src=publicImageUrl(original,stage+1);return}
+ if(stage<1&&original&&img.src!==original){img.dataset.retry="2";img.src=original;return}
+ const host=img.parentElement;if(host)host.innerHTML='<img class="public-card-fallback" src="https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png" alt="MIDES Florida" loading="eager" onerror="this.onerror=null;this.parentElement.innerHTML=\'<span>MIDES Florida</span>\'">';
+}
+function featuredPhoto(x){
+ const values=[x.fotoPrincipal,x.foto_principal,x.imagenPrincipal,x.imagen_principal,x.foto,x.imagen,x.fotos,x.galeria];
+ for(const value of values){const candidates=Array.isArray(value)?value:[value];for(const candidate of candidates){
+  if(typeof candidate==="string"&&publicImageUrl(candidate))return candidate.trim();
+  if(candidate&&typeof candidate==="object"){const nested=candidate.url||candidate.link||candidate.src||candidate.foto;if(typeof nested==="string"&&publicImageUrl(nested))return nested.trim()}
+ }}
+ return "";
+}
 function formatDate(v){if(!v)return "";const d=new Date(v+"T00:00:00");return isNaN(d)?v:d.toLocaleDateString("es-UY",{day:"2-digit",month:"long",year:"numeric"});}
 function mediaBadges(x){
   const b=[];
@@ -23,10 +46,10 @@ function render(){
  grid.classList.remove("draft-list","public-press-list");
  grid.classList.add("news-grid","public-vertical-grid");
  grid.innerHTML=data.map(x=>{
-  const photo=String(x.fotoPrincipal||"").trim();
+  const photo=featuredPhoto(x);
   const photoMarkup=photo
-   ? '<div class="public-card-image"><img src="'+esc(publicImageUrl(photo))+'" data-original="'+esc(photo)+'" alt="'+esc(x.titulo||"Foto destacada del comunicado")+'" loading="lazy" onerror="cardImageError(this)"></div>'
-   : '<div class="public-card-image public-card-image-placeholder"><span>MIDES Florida</span></div>';
+   ? '<div class="public-card-image"><img src="'+esc(publicImageUrl(photo))+'" data-original="'+esc(photo)+'" alt="'+esc(x.titulo||"Foto destacada del comunicado")+'" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="cardImageError(this)"></div>'
+   : '<div class="public-card-image public-card-image-placeholder"><img class="public-card-fallback" src="https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png" alt="MIDES Florida" loading="eager" onerror="this.onerror=null;this.parentElement.innerHTML=\'<span>MIDES Florida</span>\'"></div>';
   return '<article class="news-card public-vertical-card">'+photoMarkup+
    '<div class="news-body public-vertical-body">'+
     '<div class="public-card-meta">'+esc(x.categoria||"Comunicado")+(x.fecha?' · '+esc(formatDate(x.fecha)):"")+'</div>'+
