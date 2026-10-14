@@ -14,12 +14,23 @@ function mediaBadges(x){
 }
 function render(){
  const q=search.value.toLowerCase().trim(),c=category.value;
- const data=items.filter(x=>(!q||Object.values(x).join(" ").toLowerCase().includes(q))&&(!c||x.categoria===c));
- count.textContent=data.length+" resultado"+(data.length===1?"":"s");
- grid.innerHTML=data.map(x=>`<article class="news-card">
- <div class="news-image">${x.fotoPrincipal&&/^https?:\/\//i.test(x.fotoPrincipal)?'<img src="'+esc(publicImageUrl(x.fotoPrincipal))+'" data-original="'+esc(x.fotoPrincipal)+'" data-retry="0" alt="Fotografía de '+esc(x.titulo)+'" loading="lazy" onerror="cardImageError(this)">'':'<div class="news-image-empty">MIDES Florida</div>'}<span>${esc(x.tag||x.categoria)}</span></div>
- <div class="news-body"><div class="meta"><span>${esc(formatDate(x.fecha))}</span><span>${esc(x.categoria)}</span></div>
- <h3>${esc(x.titulo)}</h3><p>${esc(x.resumen)}</p>${mediaBadges(x)}<a href="comunicado.html?id=${encodeURIComponent(x.id)}">Ver comunicado y material →</a></div></article>`).join("")||'<div class="empty">No encontramos contenidos publicados con esos criterios.</div>';
+ const data=items.filter(x=>{
+  const published=String(x.estado||"").trim().toLowerCase()==="publicado";
+  const matchesQuery=!q||[x.titulo,x.resumen,x.contenido,x.categoria,x.tag,x.fecha].join(" ").toLowerCase().includes(q);
+  return published&&matchesQuery&&(!c||String(x.categoria||"").toLowerCase()===c.toLowerCase());
+ });
+ count.textContent=data.length+" "+(data.length===1?"comunicado publicado":"comunicados publicados");
+ grid.classList.remove("news-grid");
+ grid.classList.add("draft-list","public-press-list");
+ grid.innerHTML=data.map(x=>`<article class="draft-item public-draft-item">
+  <div class="public-draft-copy">
+   <span class="draft-meta">${esc(formatDate(x.fecha))} · ${esc(x.categoria||"Comunicado")}</span>
+   <h3>${esc(x.titulo||"Comunicado MIDES Florida")}</h3>
+   <p>${esc(x.resumen||"Comunicado oficial de MIDES Florida.")}</p>
+   ${mediaBadges(x)}
+  </div>
+  <div class="public-draft-actions"><a class="public-view-link" href="comunicado.html?id=${encodeURIComponent(x.id)}">Ver comunicado y material →</a></div>
+ </article>`).join("")||'<div class="empty public-empty">No hay comunicados publicados que coincidan con la búsqueda.</div>';
 }
 function requestJsonp(url){
  return new Promise((resolve,reject)=>{
