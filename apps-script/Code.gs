@@ -97,14 +97,25 @@ function setup(){
   return result;
 }
 function doGet(e){
+  let result;
   try{
     const a=(e&&e.parameter&&e.parameter.action)||'list';
-    if(a==='ping') return json_({ok:true,service:'Centro de Prensa MIDES Florida'});
-    if(a==='list') return json_({ok:true,items:listPublishedDirect_()});
-    if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&normalizeStatus_(item.estado)==='publicado'?item:null;return json_({ok:!!publicItem,item:publicItem});}
-    if(a==='mailing'){const item=getMailing_(e.parameter.id);return json_({ok:!!item,item:item||null});}
-    return json_({ok:false,error:'Acción GET no válida'});
-  }catch(err){return json_({ok:false,error:String(err)});}
+    if(a==='ping') result={ok:true,service:'Centro de Prensa MIDES Florida'};
+    else if(a==='list') result={ok:true,items:listPublishedDirect_()};
+    else if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&normalizeStatus_(item.estado)==='publicado'?item:null;result={ok:!!publicItem,item:publicItem};}
+    else if(a==='mailing'){const item=getMailing_(e.parameter.id);result={ok:!!item,item:item||null};}
+    else result={ok:false,error:'Acción GET no válida'};
+  }catch(err){result={ok:false,error:String(err)};}
+  // GitHub Pages no puede leer directamente el JSON de Apps Script por CORS.
+  // La modalidad JSONP permite la lectura pública sin credenciales ni cambios en Sheets.
+  const callback=String((e&&e.parameter&&e.parameter.callback)||'');
+  if(callback){
+    if(!/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)){
+      return ContentService.createTextOutput('/* callback no válido */').setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(callback+'('+JSON.stringify(result)+');').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return json_(result);
 }
 
 const CONTACT_HEADERS=['ID','Nombre','Apellido','NombreCompleto','Medio','Cargo','Email','Telefono','Localidad','Listas','Estado','Observaciones','FechaActualizacion'];
