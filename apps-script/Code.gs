@@ -101,7 +101,7 @@ function doGet(e){
     const a=(e&&e.parameter&&e.parameter.action)||'list';
     if(a==='ping') return json_({ok:true,service:'Centro de Prensa MIDES Florida'});
     if(a==='list') return json_({ok:true,items:listPublished_()});
-    if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&item.estado==='Publicado'?item:null;return json_({ok:!!publicItem,item:publicItem});}
+    if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&normalizeStatus_(item.estado)==='publicado'?item:null;return json_({ok:!!publicItem,item:publicItem});}
     if(a==='mailing'){const item=getMailing_(e.parameter.id);return json_({ok:!!item,item:item||null});}
     return json_({ok:false,error:'Acción GET no válida'});
   }catch(err){return json_({ok:false,error:String(err)});}
@@ -401,7 +401,7 @@ function doPost(e){
       : message});
   }
 }
-function listPublished_(){return readAll_().filter(x=>String(x.estado||'').trim().toLowerCase()==='publicado').sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));}
+function normalizeStatus_(value){return String(value==null?'':value).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim().toLowerCase();}\nfunction listPublished_(){return readAll_().filter(x=>normalizeStatus_(x.estado)==='publicado').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));}
 function readAll_(){const cache=CacheService.getScriptCache(),cached=cache.get('centro_prensa_comunicados');if(cached)try{return JSON.parse(cached);}catch(_){}const v=getSheet_().getDataRange().getValues();const items=v.length<2?[]:v.slice(1).filter(r=>r[0]).map(rowToObject_);try{cache.put('centro_prensa_comunicados',JSON.stringify(items),60);}catch(_){}return items;}
 function invalidateEditorialCache_(){try{CacheService.getScriptCache().remove('centro_prensa_comunicados');}catch(_){}}
 
