@@ -52,22 +52,35 @@ function prepararHojasCentroPrensa_(){
 }
 
 function autorizarCentroPrensa(){
-  // Ejecutar manualmente una vez desde el editor de Apps Script con la cuenta propietaria.
-  // Esto fuerza la solicitud de permisos de Sheets + Drive antes de usar el Web App.
+  // Ejecutar manualmente desde Apps Script con la cuenta que implementa el Web App.
+  // Primero solicita los permisos básicos de Sheets y Drive y valida la carpeta configurada.
   const ss=getSpreadsheet_();
   if(!ss)throw new Error('No se pudo acceder a la hoja de cálculo.');
   prepararHojasCentroPrensa_();
-  const root=getDriveRoot_();
-  root.getName();
-  if(CONFIG.driveRootFolderId){
-    const folder=DriveApp.getFolderById(CONFIG.driveRootFolderId);
-    folder.getName();
+  let root;
+  try{
+    root=DriveApp.getRootFolder();
+    root.getName();
+  }catch(err){
+    throw new Error('Google Drive todavía no está autorizado para esta cuenta. Ejecutá esta función desde el editor de Apps Script, aceptá los permisos de Drive y volvé a ejecutarla. Detalle: '+String(err));
   }
-  UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/about?fields=user',{
+  let message='Permisos de Google Sheets, Drive y solicitudes externas verificados.';
+  if(CONFIG.driveRootFolderId){
+    try{
+      DriveApp.getFolderById(CONFIG.driveRootFolderId).getName();
+    }catch(err){
+      // No bloquea la autorización general: getDriveRoot_ usará la carpeta alternativa de la aplicación.
+      message+=' La carpeta configurada no está disponible para esta cuenta; se utilizará la carpeta alternativa Centro de Prensa MIDES Florida en Mi unidad. Detalle: '+String(err);
+    }
+  }
+  const response=UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/about?fields=user',{
     headers:{Authorization:'Bearer '+ScriptApp.getOAuthToken()},
     muteHttpExceptions:true
   });
-  return 'Autorización de Google Sheets, Drive y solicitudes externas completada correctamente.';
+  if(response.getResponseCode()<200||response.getResponseCode()>=300){
+    throw new Error('Drive quedó accesible, pero la prueba de solicitudes externas devolvió HTTP '+response.getResponseCode()+': '+response.getContentText().slice(0,300));
+  }
+  return message;
 }
 
 function setup(){
@@ -481,7 +494,24 @@ function uploadAudio_(p){
   sh.getRange(row,16).setValue(formatDateTime_(new Date()));SpreadsheetApp.flush();invalidateEditorialCache_();
   return {fileId:file.getId(),url:url,driveUrl:file.getUrl(),name:file.getName()};
 }
-function getDriveRoot_(){return CONFIG.driveRootFolderId?DriveApp.getFolderById(CONFIG.driveRootFolderId):DriveApp.getRootFolder();}
+function getDriveRoot_(){
+  // La carpeta configurada se prefiere, pero un ID inaccesible no debe bloquear toda la carga.
+  if(CONFIG.driveRootFolderId){
+    try{
+      const configured=DriveApp.getFolderById(CONFIG.driveRootFolderId);
+      configured.getName();
+      return configured;
+    }catch(err){
+      console.warn('No se pudo usar la carpeta Drive configurada; se utilizará la carpeta alternativa. '+String(err));
+    }
+  }
+  try{
+    const root=DriveApp.getRootFolder();
+    return getOrCreateFolder_(root,'Centro de Prensa MIDES Florida');
+  }catch(err){
+    throw new Error('No se puede acceder a Google Drive con la cuenta que ejecuta la API. Abrí el proyecto Apps Script, ejecutá autorizarCentroPrensa y aceptá los permisos. Si el Web App está implementado como propietario, verificá que esa misma cuenta tenga Drive habilitado. Detalle: '+String(err));
+  }
+}
 function getOrCreateFolder_(parent,name){const it=parent.getFoldersByName(name);return it.hasNext()?it.next():parent.createFolder(name);}
 function getOrCreateCommunicationFolder_(parent,title){return getOrCreateFolder_(parent,safeFolderName_(title));}
 function safeFolderName_(name){return String(name).replace(/[\\/:*?"<>|#%{}~&]/g,' ').replace(/\s+/g,' ').trim().slice(0,150)||'Comunicado';}
