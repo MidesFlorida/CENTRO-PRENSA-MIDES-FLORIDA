@@ -26,7 +26,7 @@ async function load(){
  try{
   const res=await fetch(window.PRENSA_CONFIG.apiUrl+"?action=list",{cache:"no-store"}),data=await res.json();
   if(!data.ok)throw new Error(data.error||"Error de API");
-  items=(data.items||[]).filter(x=>String(x.estado||"").toLowerCase()==="publicado");render();
+  items=Array.isArray(data.items)?data.items:[];render();
  }catch(e){console.error(e);grid.innerHTML='<div class="empty">No fue posible consultar los comunicados en este momento.</div>';count.textContent="";}
 }
 search.addEventListener("input",render);category.addEventListener("change",render);load();
