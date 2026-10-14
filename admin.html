@@ -194,8 +194,35 @@ window.editItem=id=>{const x=items.find(i=>i.id===id);if(x)fill(x)}
 window.togglePublish=async id=>{try{const x=items.find(i=>i.id===id),action=x.estado==="Publicado"?"unpublish":"publish";await post(action,{id});showNotice(action==="publish"?"Comunicado publicado":"Comunicado pasado a borrador");await load()}catch(e){showNotice("⚠ "+e.message,"error")}}
 window.deleteItem=async id=>{if(!confirm("¿Eliminar este comunicado?"))return;try{await post("delete",{id});showNotice("✓ Comunicado eliminado.","success");reset();await load()}catch(e){showNotice("⚠ "+e.message,"error")}}
 function payload(){return{id:$("edit-id").value,fecha:$("date").value,categoria:$("category").value,tag:$("tag").value.trim(),titulo:$("title").value.trim(),resumen:$("summary").value.trim(),contenido:$("content").value.trim(),...mediaPayload()}}
-$("editor-form").addEventListener("submit",async e=>{e.preventDefault();const btn=$("save-btn");try{btn.disabled=true;btn.textContent="Guardando…";showNotice("Guardando borrador en Google Sheets…","success");const data=await post("save",payload());await uploadPendingCover(data.item.id,data.item.titulo);await uploadPendingImages(data.item.id,data.item.titulo);await uploadPendingVideo(data.item.id,data.item.titulo);
-  await uploadPendingAudio(data.item.id,data.item.titulo);const refreshed=(await post("adminGet",{id:data.item.id})).item;if(!refreshed)throw new Error("La API no devolvió el comunicado guardado.");fill(refreshed);showNotice("✓ Borrador guardado correctamente en Google Sheets.","success");await load()}catch(err){showNotice("⚠ No se pudo guardar: "+err.message,"error")}finally{btn.disabled=false;btn.textContent="Guardar borrador"}})
+$("editor-form").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const btn=$("save-btn");
+ let savedItem=null,mediaError=null;
+ try{
+  btn.disabled=true;btn.textContent="Guardando…";
+  showNotice("Guardando borrador en Google Sheets…","success");
+  const data=await post("save",payload());
+  if(!data.item)throw new Error("La API no confirmó el guardado en Google Sheets.");
+  savedItem=data.item;
+  // El texto se guarda primero. Un fallo de Drive no debe presentarse como si el borrador no se hubiera guardado.
+  try{
+   await uploadPendingCover(savedItem.id,savedItem.titulo);
+   await uploadPendingImages(savedItem.id,savedItem.titulo);
+   await uploadPendingVideo(savedItem.id,savedItem.titulo);
+   await uploadPendingAudio(savedItem.id,savedItem.titulo);
+  }catch(err){mediaError=err;}
+  const refreshed=(await post("adminGet",{id:savedItem.id})).item;
+  if(refreshed){fill(refreshed);savedItem=refreshed;}else fill(savedItem);
+  await load();
+  if(mediaError){
+   showNotice("⚠ El borrador quedó guardado en Google Sheets, pero falló la carga de un archivo en Drive: "+mediaError.message+". El texto está guardado; corregí los permisos de Drive y volvé a subir el archivo.","error");
+  }else{
+   showNotice("✓ Borrador guardado correctamente en Google Sheets.","success");
+  }
+ }catch(err){
+  showNotice((savedItem?"⚠ El borrador se guardó, pero no se pudo completar la verificación: ":"⚠ No se pudo guardar en Google Sheets: ")+err.message,"error");
+ }finally{btn.disabled=false;btn.textContent="Guardar borrador"}
+})
 $("publish-btn").addEventListener("click",async()=>{const btn=$("publish-btn");try{btn.disabled=true;btn.textContent="Publicando…";showNotice("Guardando contenido…","success");const hadMedia=pendingImages.length>0||!!pendingVideo||!!pendingAudio;let data;if(hadMedia){data=await post("save",payload());if(!data.item)throw new Error("La API no devolvió el comunicado guardado.");await uploadPendingImages(data.item.id,data.item.titulo);await uploadPendingVideo(data.item.id,data.item.titulo);await uploadPendingAudio(data.item.id,data.item.titulo);const mediaReady=(await post("adminGet",{id:data.item.id})).item;if(!mediaReady)throw new Error("No se pudo verificar el contenido multimedia en Drive.");data=await post("publish",{id:data.item.id});}else{data=await post("savePublish",payload())}if(!data.item)throw new Error("La API no devolvió el comunicado publicado.");const refreshed=(await post("adminGet",{id:data.item.id})).item;fill(refreshed);showNotice("✓ Comunicado publicado correctamente en la sala de prensa.","success");await load()}catch(err){showNotice("⚠ No se pudo publicar: "+err.message,"error")}finally{btn.disabled=false;btn.textContent="Publicar"}})
 $("clear-btn").addEventListener("click",reset);
 let contacts=[],mailLists=[],selectedContactIds=new Set(),publishedForMailing=[];
