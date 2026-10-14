@@ -256,7 +256,8 @@ $("admin-prev-month").onclick=()=>{adminAgendaDate=new Date(adminAgendaDate.getF
       window.editorialAuthorized=true;
       screen.classList.add("ok");
       if(error)error.style.display="none";
-      if (typeof load === "function") { try { load(); } catch (_) {} }
+      // El listener principal del formulario ejecuta load() al continuar
+      // el submit en fase bubble; no duplicar la petición a Google Sheets.
       return false;
     },true);
   }
