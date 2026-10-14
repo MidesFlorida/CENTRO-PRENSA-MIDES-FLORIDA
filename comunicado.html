@@ -18,6 +18,7 @@
 .article-cover{display:block;width:auto;max-width:100%;max-height:430px;object-fit:contain;margin:0 auto;border-radius:10px;background:#f0f4f7}
 .media-heading{font-size:20px;color:#17324d;margin:28px 0 10px}
 .media-fallback{padding:16px;background:#f4f8fb;color:#687986;font-size:13px;border-radius:8px}
+.media-download{display:flex;justify-content:center;margin:10px auto 18px}.media-download a{display:inline-flex;align-items:center;gap:7px;background:#005ca9;color:#fff;text-decoration:none;font-size:13px;font-weight:800;padding:10px 15px;border-radius:7px}.media-download a:hover{filter:brightness(.93)}.gallery-download{margin-bottom:0}
 @media(max-width:560px){.article-cover{max-height:300px}.article-gallery-image{max-height:320px}.article-video-player{max-height:none}.gallery-controls button{padding:9px 11px}}
 </style></head>
 <body>
@@ -29,6 +30,8 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function formatDate(v){if(!v)return "";const d=new Date(v+"T00:00:00");return isNaN(d)?v:d.toLocaleDateString("es-UY",{day:"2-digit",month:"long",year:"numeric"});}
 function driveId(url){try{const u=new URL(url);if(!/(^|\.)drive\.google\.com$/i.test(u.hostname))return "";return u.searchParams.get("id")||((u.pathname.match(/\/file\/d\/([^/]+)/)||[])[1]||"")}catch(e){return ""}}
 function imageSource(url){const fid=driveId(url);return fid?"https://drive.google.com/thumbnail?id="+encodeURIComponent(fid)+"&sz=w1400":url}
+function downloadSource(url,fileId){const fid=fileId||driveId(url||"");if(fid)return "https://drive.google.com/uc?export=download&id="+encodeURIComponent(fid);return url||""}
+function downloadButton(url,fileId,label){const target=downloadSource(url,fileId);if(!target||!/^https?:\\/\\//i.test(target))return "";return '<div class="media-download"><a href="'+esc(target)+'" download target="_blank" rel="noopener">⬇ '+esc(label||"Descargar archivo")+'</a></div>'}
 function imageHtml(url,cls=""){if(!/^https?:\/\//i.test(url))return "";return '<img class="'+cls+'" src="'+esc(imageSource(url))+'" data-original="'+esc(url)+'" alt="Material fotográfico de la actividad" loading="lazy" onerror="if(this.dataset.retry!==\'1\'){this.dataset.retry=\'1\';this.src=this.dataset.original}else{this.hidden=true;this.parentElement.classList.add(\'image-unavailable\')}">'}
 function videoEmbed(url,fileId){
  try{
@@ -44,16 +47,16 @@ function videoEmbed(url,fileId){
 }
 function renderGallery(photos){
  const host=document.getElementById("gallery");if(!photos.length)return false;
- host.hidden=false;host.innerHTML='<h2 class="media-heading">Galería de fotografías</h2><div class="article-gallery"><div class="gallery-frame" id="galleryFrame"></div><div class="gallery-controls"><button type="button" id="galleryPrev" aria-label="Fotografía anterior">← Anterior</button><span class="gallery-counter" id="galleryCounter"></span><button type="button" id="galleryNext" aria-label="Fotografía siguiente">Siguiente →</button></div></div>';
+ host.hidden=false;host.innerHTML='<h2 class="media-heading">Galería de fotografías</h2><div class="article-gallery"><div class="gallery-frame" id="galleryFrame"></div><div class="gallery-controls"><button type="button" id="galleryPrev" aria-label="Fotografía anterior">← Anterior</button><span class="gallery-counter" id="galleryCounter"></span><button type="button" id="galleryNext" aria-label="Fotografía siguiente">Siguiente →</button></div><div id="galleryDownload" class="gallery-download"></div></div>';
  let current=0;const frame=document.getElementById("galleryFrame"),counter=document.getElementById("galleryCounter");
- function show(n){current=(n+photos.length)%photos.length;frame.innerHTML=imageHtml(photos[current],"article-gallery-image");counter.textContent=(current+1)+" / "+photos.length;const img=frame.querySelector("img");if(img)img.addEventListener("click",()=>window.open(photos[current],"_blank","noopener"));document.getElementById("galleryPrev").disabled=photos.length<2;document.getElementById("galleryNext").disabled=photos.length<2;}
+ function show(n){current=(n+photos.length)%photos.length;frame.innerHTML=imageHtml(photos[current],"article-gallery-image");counter.textContent=(current+1)+" / "+photos.length;document.getElementById("galleryDownload").innerHTML=downloadButton(photos[current],"","Descargar fotografía");const img=frame.querySelector("img");if(img)img.addEventListener("click",()=>window.open(photos[current],"_blank","noopener"));document.getElementById("galleryPrev").disabled=photos.length<2;document.getElementById("galleryNext").disabled=photos.length<2;}
  document.getElementById("galleryPrev").addEventListener("click",()=>show(current-1));document.getElementById("galleryNext").addEventListener("click",()=>show(current+1));show(0);return true;
 }
 async function load(){if(!api||!id){showError();return}try{const r=await fetch(api+"?action=get&id="+encodeURIComponent(id),{cache:"no-store"}),d=await r.json();if(!d.ok||!d.item){showError();return}const x=d.item;document.title=x.titulo+" | Centro de Prensa";document.getElementById("title").textContent=x.titulo;document.getElementById("date").textContent=[formatDate(x.fecha),x.tag].filter(Boolean).join(" · ");document.getElementById("content").innerHTML=esc(x.contenido).replace(/\n/g,"<br>");
- if(x.fotoPrincipal){document.getElementById("cover").innerHTML='<div class="article-cover-wrap">'+imageHtml(x.fotoPrincipal,"article-cover")+'</div>';}
- let media=false;const video=videoEmbed(x.videoUrl||"",x.videoDriveFileId||"");if(video){document.getElementById("video").innerHTML=video;document.getElementById("video").hidden=false;media=true;}
+ if(x.fotoPrincipal){document.getElementById("cover").innerHTML='<div class="article-cover-wrap">'+imageHtml(x.fotoPrincipal,"article-cover")+'</div>'+downloadButton(x.fotoPrincipal,"","Descargar fotografía principal");}
+ let media=false;const video=videoEmbed(x.videoUrl||"",x.videoDriveFileId||"");if(video){document.getElementById("video").innerHTML=video+downloadButton(x.videoUrl||"",x.videoDriveFileId||"","Descargar video");document.getElementById("video").hidden=false;media=true;}
  const photos=(x.fotos||[]).filter(p=>/^https?:\/\//i.test(p));if(renderGallery(photos))media=true;
- if(x.audioUrl){document.getElementById("audio").innerHTML='<h2 class="media-heading">Nota de audio</h2><audio controls preload="metadata" src="'+esc(x.audioUrl)+'" style="width:100%"></audio>';document.getElementById("audio").hidden=false;media=true;}
+ if(x.audioUrl){document.getElementById("audio").innerHTML='<h2 class="media-heading">Nota de audio</h2><audio controls preload="metadata" src="'+esc(x.audioUrl)+'" style="width:100%"></audio>'+downloadButton(x.audioUrl,x.audioDriveFileId||"","Descargar audio");document.getElementById("audio").hidden=false;media=true;}
  document.getElementById("media").hidden=!media;
  }catch(e){console.error(e);showError()}}
 function showError(){document.getElementById("title").textContent="Comunicado no disponible";document.getElementById("date").textContent="";document.getElementById("content").textContent="El contenido solicitado no está publicado o no se encuentra disponible."}
