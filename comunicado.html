@@ -25,7 +25,7 @@
 <body>
 <header class="site-header"><div class="brand-wrap"><img class="brand-logo" src="https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png" alt="Ministerio de Desarrollo Social"><div class="brand-divider"></div><div><strong>CENTRO DE PRENSA</strong> <span>MIDES Florida</span></div></div><div class="site-module-actions" aria-label="Navegación del sitio"><a class="site-home-button" href="index.html">⌂ Volver a inicio</a><a class="site-exit-button" href="https://www.gub.uy/ministerio-desarrollo-social/" onclick="return confirm('Vas a salir del Centro de Prensa MIDES Florida. ¿Continuar?')">↗ Salir del sitio</a></div></header>
 <main class="article-main"><article id="article"><p class="eyebrow">COMUNICADO</p><h1 id="title">Cargando…</h1><p class="article-date" id="date"></p><div id="cover"></div><div class="article-placeholder" id="content"></div><section id="media" class="article-media" hidden><div id="video" hidden></div><div id="gallery" hidden></div><div id="audio" hidden></div></section><div class="download-box"><strong>Material para medios</strong><span>Fotografías · Video · Audio</span></div></article></main>
-<script src="config.js"></script><script>
+<script src="config.js?v=20261014-2"></script><script>
 const id=new URLSearchParams(location.search).get("id"),api=window.PRENSA_CONFIG?.apiUrl;
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function formatDate(v){if(!v)return "";const d=new Date(v+"T00:00:00");return isNaN(d)?v:d.toLocaleDateString("es-UY",{day:"2-digit",month:"long",year:"numeric"});}
