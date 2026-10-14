@@ -31,7 +31,7 @@ function formatDate(v){if(!v)return "";const d=new Date(v+"T00:00:00");return is
 function driveId(url){try{const u=new URL(url);if(!/(^|\.)drive\.google\.com$/i.test(u.hostname))return "";return u.searchParams.get("id")||((u.pathname.match(/\/file\/d\/([^/]+)/)||[])[1]||"")}catch(e){return ""}}
 function imageSource(url){const fid=driveId(url);return fid?"https://drive.google.com/thumbnail?id="+encodeURIComponent(fid)+"&sz=w1400":url}
 function downloadSource(url,fileId){const fid=fileId||driveId(url||"");if(fid)return "https://drive.google.com/uc?export=download&id="+encodeURIComponent(fid);return url||""}
-function downloadButton(url,fileId,label){const target=downloadSource(url,fileId);if(!target||!/^https?:\\/\\//i.test(target))return "";return '<div class="media-download"><a href="'+esc(target)+'" download target="_blank" rel="noopener">⬇ '+esc(label||"Descargar archivo")+'</a></div>'}
+function downloadButton(url,fileId,label){const target=downloadSource(url,fileId);if(!target||!(target.startsWith("https://")||target.startsWith("http://")))return "";return '<div class="media-download"><a href="'+esc(target)+'" download target="_blank" rel="noopener">⬇ '+esc(label||"Descargar archivo")+'</a></div>'}
 function imageHtml(url,cls=""){if(!/^https?:\/\//i.test(url))return "";return '<img class="'+cls+'" src="'+esc(imageSource(url))+'" data-original="'+esc(url)+'" alt="Material fotográfico de la actividad" loading="lazy" onerror="if(this.dataset.retry!==\'1\'){this.dataset.retry=\'1\';this.src=this.dataset.original}else{this.hidden=true;this.parentElement.classList.add(\'image-unavailable\')}">'}
 function videoEmbed(url,fileId){
  try{
