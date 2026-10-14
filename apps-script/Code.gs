@@ -79,7 +79,9 @@ function setup(){
   const diagnostic=diagnosticoHojasCentroPrensa_();
   const missing=diagnostic.filter(x=>!x.existe).map(x=>x.nombre);
   if(missing.length)throw new Error('Faltan hojas después de inicializar: '+missing.join(', '));
-  return json_({ok:true,message:'Estructura inicializada y verificada sin borrar datos existentes.',sheets:diagnostic});
+  const result={ok:true,message:'Estructura inicializada y verificada sin borrar datos existentes.',sheets:diagnostic};
+  Logger.log(JSON.stringify(result,null,2));
+  return result;
 }
 function doGet(e){
   try{
