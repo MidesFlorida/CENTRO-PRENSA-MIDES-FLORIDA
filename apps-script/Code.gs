@@ -391,7 +391,15 @@ function doPost(e){
     if(p.action==='publish'){const item=setStatus_(p.id,'Publicado');return json_({ok:!!item,item:item,error:item?null:'No se encontró el comunicado para publicar.'});}
     if(p.action==='unpublish')return json_({ok:setStatus_(p.id,'Borrador'),item:findById_(p.id)});
     return json_({ok:false,error:'Acción POST no válida'});
-  }catch(err){return json_({ok:false,error:String(err)});}
+  }catch(err){
+    const action=(e&&e.parameter&&e.parameter.action)||'desconocida';
+    const message=String(err&&err.message?err.message:err);
+    // Dar contexto para distinguir un fallo al guardar texto en Sheets de un fallo de Drive.
+    const driveFailure=/DriveApp|Google Drive|drive\.googleapis\.com|Acceso denegado/i.test(message);
+    return json_({ok:false,action:action,error:driveFailure
+      ? 'La acción "'+action+'" falló al acceder a Google Drive. Si es una carga multimedia, el texto del comunicado debe guardarse primero con la acción save. Para habilitar archivos, sincronizá este Code.gs con Apps Script, ejecutá autorizarCentroPrensa desde el editor, aceptá los permisos y volvé a implementar la aplicación web. Detalle: '+message
+      : message});
+  }
 }
 function listPublished_(){return readAll_().filter(x=>String(x.estado||'').trim().toLowerCase()==='publicado').sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));}
 function readAll_(){const cache=CacheService.getScriptCache(),cached=cache.get('centro_prensa_comunicados');if(cached)try{return JSON.parse(cached);}catch(_){}const v=getSheet_().getDataRange().getValues();const items=v.length<2?[]:v.slice(1).filter(r=>r[0]).map(rowToObject_);try{cache.put('centro_prensa_comunicados',JSON.stringify(items),60);}catch(_){}return items;}
@@ -494,6 +502,18 @@ function uploadAudio_(p){
   sh.getRange(row,16).setValue(formatDateTime_(new Date()));SpreadsheetApp.flush();invalidateEditorialCache_();
   return {fileId:file.getId(),url:url,driveUrl:file.getUrl(),name:file.getName()};
 }
+function diagnosticoDriveCentroPrensa(){
+  // Ejecutar manualmente desde el editor de Apps Script después de sincronizar este archivo.
+  // Permite confirmar qué permisos tiene realmente la identidad que ejecuta el proyecto.
+  const result={ok:false,identity:'',rootAccessible:false,configuredFolderAccessible:false,detail:''};
+  try{result.identity=Session.getEffectiveUser().getEmail()||'(correo no disponible)';}catch(err){result.identity='(no disponible: '+String(err)+')';}
+  try{const root=DriveApp.getRootFolder();result.rootAccessible=!!root.getId();}catch(err){result.detail='DriveApp no está autorizado o la cuenta ejecutora no tiene acceso: '+String(err);return result;}
+  if(CONFIG.driveRootFolderId){try{result.configuredFolderAccessible=!!DriveApp.getFolderById(CONFIG.driveRootFolderId).getId();}catch(err){result.detail='La carpeta configurada no es accesible; se usará la carpeta alternativa. '+String(err);}}
+  result.ok=result.rootAccessible;
+  if(!result.detail)result.detail=result.configuredFolderAccessible?'Drive y carpeta configurada accesibles.':'Drive accesible; la carpeta configurada no está disponible y se usará la alternativa.';
+  return result;
+}
+
 function getDriveRoot_(){
   // La carpeta configurada se prefiere, pero un ID inaccesible no debe bloquear toda la carga.
   if(CONFIG.driveRootFolderId){
