@@ -14,6 +14,7 @@
 .gallery-counter{font-size:13px;color:#687986;min-width:70px;text-align:center}
 .article-video{margin-top:14px;position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
 .article-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.article-audio-frame{display:block;width:100%;height:120px;border:0;border-radius:8px;background:#f4f8fb;margin:12px auto}
 .article-cover-wrap{margin:24px auto 8px;max-width:760px;text-align:center}
 .article-cover{display:block;width:auto;max-width:100%;max-height:430px;object-fit:contain;margin:0 auto;border-radius:10px;background:#f0f4f7}
 .media-heading{font-size:20px;color:#17324d;margin:28px 0 10px}
@@ -56,7 +57,7 @@ async function load(){if(!api||!id){showError();return}try{const r=await fetch(a
  if(x.fotoPrincipal){document.getElementById("cover").innerHTML='<div class="article-cover-wrap">'+imageHtml(x.fotoPrincipal,"article-cover")+'</div>'+downloadButton(x.fotoPrincipal,"","Descargar fotografía principal");}
  let media=false;const video=videoEmbed(x.videoUrl||"",x.videoDriveFileId||"");if(video){document.getElementById("video").innerHTML=video+downloadButton(x.videoUrl||"",x.videoDriveFileId||"","Descargar video");document.getElementById("video").hidden=false;media=true;}
  const photos=(x.fotos||[]).filter(p=>/^https?:\/\//i.test(p));if(renderGallery(photos))media=true;
- if(x.audioUrl){document.getElementById("audio").innerHTML='<h2 class="media-heading">Nota de audio</h2><audio controls preload="metadata" src="'+esc(x.audioUrl)+'" style="width:100%"></audio>'+downloadButton(x.audioUrl,x.audioDriveFileId||"","Descargar audio");document.getElementById("audio").hidden=false;media=true;}
+ if(x.audioUrl||x.audioDriveFileId){const audioId=x.audioDriveFileId||driveId(x.audioUrl||"");const audioPlayer=audioId?'<iframe class="article-audio-frame" src="https://drive.google.com/file/d/'+encodeURIComponent(audioId)+'/preview" title="Reproductor de nota de audio" loading="lazy" allow="autoplay"></iframe>':'<audio controls preload="metadata" src="'+esc(x.audioUrl)+'" style="width:100%"></audio>';document.getElementById("audio").innerHTML='<h2 class="media-heading">Nota de audio</h2>'+audioPlayer+downloadButton(x.audioUrl||"",audioId,"Descargar audio");document.getElementById("audio").hidden=false;media=true;}
  document.getElementById("media").hidden=!media;
  }catch(e){console.error(e);showError()}}
 function showError(){document.getElementById("title").textContent="Comunicado no disponible";document.getElementById("date").textContent="";document.getElementById("content").textContent="El contenido solicitado no está publicado o no se encuentra disponible."}
