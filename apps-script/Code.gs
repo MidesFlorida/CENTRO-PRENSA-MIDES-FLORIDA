@@ -326,7 +326,7 @@ function validateFuncionario_(p){const u=findFuncionarioByCredentials_(p.nombre|
 function uploadAgendaImage_(p){
   const u=validateFuncionario_(p);if(!p.data)throw new Error('No se recibió la imagen.');
   const bytes=Utilities.base64Decode(String(p.data).replace(/^data:[^;]+;base64,/,''));
-  if(bytes.length>10*1024*1024)throw new Error('La imagen supera el límite de 10 MB.');
+
   const root=getDriveRoot_(),folder=getOrCreateFolder_(root,'Agenda de actividades - MIDES Florida');
   const safe=String(p.fileName||'actividad.jpg').replace(/[^a-zA-Z0-9._-]/g,'_');
   const file=folder.createFile(Utilities.newBlob(bytes,p.mimeType||'image/jpeg',u.id+'_'+Date.now()+'_'+safe));
@@ -449,7 +449,7 @@ function uploadVideoChunk_(p){
 function uploadCover_(p){
  if(!p.id)throw new Error('Primero guardá el comunicado como borrador.');if(!p.data)throw new Error('No se recibió la foto principal.');
  const root=getDriveRoot_(),folder=getOrCreateCommunicationFolder_(root,p.titulo||'Comunicado '+p.id),data=String(p.data).replace(/^data:[^;]+;base64,/,'');
- const bytes=Utilities.base64Decode(data);if(bytes.length>10*1024*1024)throw new Error('La foto principal supera el límite de 10 MB.');
+ const bytes=Utilities.base64Decode(data);
  const file=folder.createFile(Utilities.newBlob(bytes,p.mimeType||'image/jpeg',p.fileName||'foto-principal.jpg'));try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW)}catch(err){}
  const sh=getSheet_(),row=findRow_(sh,p.id);if(row<0)throw new Error('No se encontró el comunicado para asociar la foto principal.');
  const url='https://drive.google.com/uc?export=view&id='+file.getId();sh.getRange(row,9).setValue(url);sh.getRange(row,16).setValue(formatDateTime_(new Date()));SpreadsheetApp.flush();invalidateEditorialCache_();
@@ -458,8 +458,8 @@ function uploadCover_(p){
 function uploadImages_(p){
   if(!p.id)throw new Error('Primero guardá el comunicado como borrador.');
   if(!p.files)throw new Error('No se recibieron imágenes.');
-  const files=JSON.parse(p.files),max=10*1024*1024,root=getDriveRoot_(),titleFolder=getOrCreateCommunicationFolder_(root,p.titulo||'Comunicado '+p.id),uploaded=[];
-  files.forEach(f=>{const data=String(f.data||'').replace(/^data:[^;]+;base64,/,'');const bytes=Utilities.base64Decode(data);if(bytes.length>max)throw new Error('La imagen '+f.name+' supera el límite de 10 MB.');const file=titleFolder.createFile(Utilities.newBlob(bytes,f.type||'image/jpeg',f.name));try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(err){}uploaded.push({id:file.getId(),name:file.getName(),url:file.getUrl(),directUrl:'https://drive.google.com/uc?export=view&id='+file.getId()});});
+  const files=JSON.parse(p.files),root=getDriveRoot_(),titleFolder=getOrCreateCommunicationFolder_(root,p.titulo||'Comunicado '+p.id),uploaded=[];
+  files.forEach(f=>{const data=String(f.data||'').replace(/^data:[^;]+;base64,/,'');const bytes=Utilities.base64Decode(data);const file=titleFolder.createFile(Utilities.newBlob(bytes,f.type||'image/jpeg',f.name));try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(err){}uploaded.push({id:file.getId(),name:file.getName(),url:file.getUrl(),directUrl:'https://drive.google.com/uc?export=view&id='+file.getId()});});
   const sh=getSheet_(),row=findRow_(sh,p.id);if(row<0)throw new Error('No se encontró el comunicado para asociar las imágenes.');
   const current=splitPhotos_(sh.getRange(row,10).getValue());sh.getRange(row,10).setValue(current.concat(uploaded.map(x=>x.directUrl)).join('\n'));sh.getRange(row,16).setValue(formatDateTime_(new Date()));SpreadsheetApp.flush();invalidateEditorialCache_();
   return {folderId:titleFolder.getId(),folderName:titleFolder.getName(),items:uploaded};
@@ -471,7 +471,7 @@ function uploadAudio_(p){
   const root=getDriveRoot_(),folder=getOrCreateCommunicationFolder_(root,p.titulo||'Comunicado '+p.id);
   const data=String(p.data).replace(/^data:[^;]+;base64,/,'');
   const bytes=Utilities.base64Decode(data);
-  if(bytes.length>25*1024*1024)throw new Error('El MP3 supera el límite de 25 MB.');
+
   const file=folder.createFile(Utilities.newBlob(bytes,'audio/mpeg',p.fileName));
   try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(err){}
   const sh=getSheet_(),row=findRow_(sh,p.id);
