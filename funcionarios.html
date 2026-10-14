@@ -30,8 +30,15 @@ const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 async function api(action,extra={}){
  const body=new URLSearchParams({action,...extra});
- const r=await fetch(window.PRENSA_CONFIG.apiUrl,{method:'POST',body});const raw=await r.text();let d;try{d=JSON.parse(raw)}catch(e){throw new Error('Respuesta no válida de la API.')}
- if(!d.ok)throw new Error(d.error||'Error de API');return d;
+ let r,raw,d;
+ try{
+  r=await fetch(window.PRENSA_CONFIG.apiUrl,{method:'POST',body});
+  raw=await r.text();
+ }catch(e){
+  throw new Error('No se pudo conectar con el servicio de funcionarios. Verificá la conexión a internet y que la implementación de Apps Script esté publicada para ejecutarse como el propietario y permita acceso a cualquier usuario con el enlace.');
+ }
+ try{d=JSON.parse(raw)}catch(e){throw new Error('El servicio devolvió una respuesta que no es JSON. Puede que la implementación de Apps Script esté desactualizada o que Google haya solicitado iniciar sesión.')}
+ if(!d.ok)throw new Error(d.error||'El servicio rechazó la solicitud.');return d;
 }
 function auth(){return user?{nombreUsuario:user.nombre,area:user.area,password:user.password}:{}} 
 function monthBounds(){const y=currentMonth.getFullYear(),m=currentMonth.getMonth(),from=new Date(y,m,1,0,0,0),to=new Date(y,m+1,0,23,59,59);return {from:localIso(from),to:localIso(to)}}
