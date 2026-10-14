@@ -21,6 +21,24 @@ function render(){
  <div class="news-body"><div class="meta"><span>${esc(formatDate(x.fecha))}</span><span>${esc(x.categoria)}</span></div>
  <h3>${esc(x.titulo)}</h3><p>${esc(x.resumen)}</p>${mediaBadges(x)}<a href="comunicado.html?id=${encodeURIComponent(x.id)}">Ver comunicado y material →</a></div></article>`).join("")||'<div class="empty">No encontramos contenidos publicados con esos criterios.</div>';
 }
+function requestJsonp(url){
+ return new Promise((resolve,reject)=>{
+  const callbackName="__prensaJsonp_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+  const script=document.createElement("script");
+  let finished=false;
+  const cleanup=()=>{if(finished)return;finished=true;clearTimeout(timer);delete window[callbackName];script.remove();};
+  const timer=setTimeout(()=>{cleanup();reject(new Error("La API no respondió por JSONP. Hay que actualizar la implementación de Apps Script."));},15000);
+  window[callbackName]=(data)=>{cleanup();resolve(data);};
+  script.onerror=()=>{cleanup();reject(new Error("No se pudo cargar la respuesta de Google Apps Script."));};
+  const endpoint=new URL(url);
+  endpoint.searchParams.set("action","list");
+  endpoint.searchParams.set("callback",callbackName);
+  endpoint.searchParams.set("_",String(Date.now()));
+  script.src=endpoint.toString();
+  script.async=true;
+  document.head.appendChild(script);
+ });
+}
 async function load(){
  if(!grid||!search||!category||!count)return;
  if(!window.PRENSA_CONFIG?.apiUrl){
@@ -30,14 +48,8 @@ async function load(){
  }
  grid.innerHTML='<div class="empty">Cargando comunicados publicados…</div>';
  try{
-  const endpoint=new URL(window.PRENSA_CONFIG.apiUrl);
-  endpoint.searchParams.set("action","list");
-  endpoint.searchParams.set("_",String(Date.now()));
-  const res=await fetch(endpoint.toString(),{method:"GET",cache:"no-store",redirect:"follow"});
-  if(!res.ok)throw new Error("La API respondió con HTTP "+res.status);
-  const raw=await res.text();
-  let data;
-  try{data=JSON.parse(raw)}catch(_){throw new Error("La API no devolvió JSON válido. Verificá la implementación de Apps Script.")}
+  // JSONP evita el bloqueo CORS de Google Apps Script al consultarlo desde GitHub Pages.
+  const data=await requestJsonp(window.PRENSA_CONFIG.apiUrl);
   if(!data||data.ok!==true)throw new Error(data?.error||"La API no confirmó la consulta");
   if(!Array.isArray(data.items))throw new Error("La API respondió, pero no entregó una lista de comunicados");
   // La API pública ya filtra por estado; no se vuelve a filtrar en el navegador.
