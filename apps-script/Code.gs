@@ -471,7 +471,7 @@ function uploadCover_(p){
   if(!p.id)throw new Error('Primero guardá el comunicado como borrador.');
   if(!p.data)throw new Error('No se recibió la foto principal.');
   // Usa la API REST de Drive en vez de DriveApp, que devuelve "Acceso denegado".
-  const bytes=Utilities.base64Decode(String(p.data).replace(/^data:[^;]+;base64/, ''));
+  const bytes=Utilities.base64Decode(String(p.data).replace(/^data:[^;]+;base64,/, ''));
   const fileName=String(p.fileName||'foto-principal.jpg'),mimeType=String(p.mimeType||'image/jpeg');
   const folder=driveGetOrCreateCommunicationFolderRest_(p.titulo||'Comunicado '+p.id);
   const boundary='----CentroPrensa'+Utilities.getUuid().replace(/-/g,'');
