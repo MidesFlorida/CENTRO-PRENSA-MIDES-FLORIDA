@@ -22,14 +22,32 @@ function render(){
  <h3>${esc(x.titulo)}</h3><p>${esc(x.resumen)}</p>${mediaBadges(x)}<a href="comunicado.html?id=${encodeURIComponent(x.id)}">Ver comunicado y material →</a></div></article>`).join("")||'<div class="empty">No encontramos contenidos publicados con esos criterios.</div>';
 }
 async function load(){
- if(!window.PRENSA_CONFIG?.apiUrl){grid.innerHTML='<div class="empty">La sala de prensa está pendiente de conectar con su base institucional.</div>';return;}
+ if(!grid||!search||!category||!count)return;
+ if(!window.PRENSA_CONFIG?.apiUrl){
+  grid.innerHTML='<div class="empty">La sala de prensa está pendiente de conectar con su base institucional.</div>';
+  count.textContent="";
+  return;
+ }
+ grid.innerHTML='<div class="empty">Cargando comunicados publicados…</div>';
  try{
-  const res=await fetch(window.PRENSA_CONFIG.apiUrl+"?action=list",{cache:"no-store"}),data=await res.json();
-  if(!data.ok)throw new Error(data.error||"Error de API");
-  // action=list del backend entrega exclusivamente comunicados publicados.
-  // No se aplica un segundo filtro en el navegador que pueda ocultar contenidos.
-  items=Array.isArray(data.items)?data.items:[];
+  const endpoint=new URL(window.PRENSA_CONFIG.apiUrl);
+  endpoint.searchParams.set("action","list");
+  endpoint.searchParams.set("_",String(Date.now()));
+  const res=await fetch(endpoint.toString(),{method:"GET",cache:"no-store",redirect:"follow"});
+  if(!res.ok)throw new Error("La API respondió con HTTP "+res.status);
+  const raw=await res.text();
+  let data;
+  try{data=JSON.parse(raw)}catch(_){throw new Error("La API no devolvió JSON válido. Verificá la implementación de Apps Script.")}
+  if(!data||data.ok!==true)throw new Error(data?.error||"La API no confirmó la consulta");
+  if(!Array.isArray(data.items))throw new Error("La API respondió, pero no entregó una lista de comunicados");
+  // La API pública ya filtra por estado; no se vuelve a filtrar en el navegador.
+  items=data.items;
   render();
- }catch(e){console.error(e);grid.innerHTML='<div class="empty">No fue posible consultar los comunicados en este momento.</div>';count.textContent="";}
+  if(!items.length)grid.innerHTML='<div class="empty">Todavía no hay comunicados publicados.</div>';
+ }catch(e){
+  console.error("Centro de Prensa: no se pudieron cargar los comunicados",e);
+  grid.innerHTML='<div class="empty"><strong>No fue posible mostrar los comunicados.</strong><br>La conexión con Google respondió con un error. Actualizá la página en unos segundos. Si persiste, contactá al administrador.<br><small>'+esc(e&&e.message?e.message:"Error de conexión")+'</small></div>';
+  count.textContent="";
+ }
 }
 search.addEventListener("input",render);category.addEventListener("change",render);load();
