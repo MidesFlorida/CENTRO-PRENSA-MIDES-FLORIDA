@@ -33,6 +33,11 @@ function ensureHeaders_(sh,headers){
 function prepararHojasCentroPrensa_(){
   // Inicialización idempotente: crea o normaliza hojas sin borrar filas ni pestañas.
   getSheet_();
+  // Si no existe la fuente de contactos, crear una pestaña vacía con encabezados
+  // compatibles con una exportación de Google Contacts. Nunca reescribir una fuente existente.
+  if(!getSpreadsheet_().getSheetByName(CONTACT_SOURCE_SHEET)){
+    getNamedSheet_(CONTACT_SOURCE_SHEET,['Given Name','Family Name','Name','E-mail 1 - Value','Phone 1 - Value','Organization 1 - Name','Organization 1 - Title','Address 1 - City']);
+  }
   ensureContactsStructure_();
   getNamedSheet_(CONTACTS_SHEET,CONTACT_HEADERS);
   getMailingSheet_();
