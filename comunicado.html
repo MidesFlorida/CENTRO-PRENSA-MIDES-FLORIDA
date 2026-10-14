@@ -1,32 +1,61 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Comunicado del Centro de Prensa MIDES Florida"><title>Comunicado | Centro de Prensa</title><link rel="stylesheet" href="assets/css/style.css"><style>.article-video-player{display:block;width:100%;max-width:1100px;max-height:620px;border-radius:12px;background:#000;margin:12px auto}.article-media{margin-top:28px}.article-gallery-image{cursor:zoom-in}.media-download{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.media-download a{display:inline-flex;align-items:center;padding:10px 14px;border:1px solid #d8e0e5;border-radius:8px;text-decoration:none;font-weight:700}</style></head>
-<body><header class="site-header"><div class="brand-wrap"><img class="brand-logo" src="https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png" alt="Ministerio de Desarrollo Social"><div class="brand-divider"></div><div><strong>CENTRO DE PRENSA</strong><span>MIDES Florida</span></div></div><div class="site-module-actions" aria-label="Navegación del sitio">
-  <a class="site-home-button" href="index.html">⌂ Volver a inicio</a>
-  <a class="site-exit-button" href="https://www.gub.uy/ministerio-desarrollo-social/" onclick="return confirm('Vas a salir del Centro de Prensa MIDES Florida. ¿Continuar?')">↗ Salir del sitio</a>
-</div></header>
-<main class="article-main"><article id="article"><p class="eyebrow">COMUNICADO</p><h1 id="title">Cargando…</h1><p class="article-date" id="date"></p><div id="cover"></div><div class="article-placeholder" id="content"></div><section id="media" class="article-media" hidden><div id="gallery" class="article-gallery"></div><div id="video" class="article-video" hidden></div><div id="audio" class="article-audio" hidden></div></section><div class="download-box"><strong>Material para medios</strong><span>Fotografías · Video · Documento</span></div></article></main>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Comunicado del Centro de Prensa MIDES Florida">
+<title>Comunicado | Centro de Prensa</title><link rel="stylesheet" href="assets/css/style.css">
+<style>
+.article-video-player{display:block;width:100%;aspect-ratio:16/9;max-height:560px;border:0;border-radius:10px;background:#000;margin:12px auto}
+.article-media{margin-top:32px}.article-gallery{display:block;position:relative;max-width:760px;margin:12px auto 0}
+.gallery-frame{display:flex;align-items:center;justify-content:center;min-height:180px;background:#f0f4f7;border-radius:10px;overflow:hidden}
+.article-gallery-image{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;cursor:zoom-in}
+.gallery-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:12px}
+.gallery-controls button{border:1px solid #d8e0e5;border-radius:7px;background:#fff;color:#17324d;padding:9px 14px;font-weight:700;cursor:pointer}
+.gallery-counter{font-size:13px;color:#687986;min-width:70px;text-align:center}
+.article-video{margin-top:14px;position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+.article-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.article-cover-wrap{margin:24px auto 8px;max-width:760px;text-align:center}
+.article-cover{display:block;width:auto;max-width:100%;max-height:430px;object-fit:contain;margin:0 auto;border-radius:10px;background:#f0f4f7}
+.media-heading{font-size:20px;color:#17324d;margin:28px 0 10px}
+.media-fallback{padding:16px;background:#f4f8fb;color:#687986;font-size:13px;border-radius:8px}
+@media(max-width:560px){.article-cover{max-height:300px}.article-gallery-image{max-height:320px}.article-video-player{max-height:none}.gallery-controls button{padding:9px 11px}}
+</style></head>
+<body>
+<header class="site-header"><div class="brand-wrap"><img class="brand-logo" src="https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png" alt="Ministerio de Desarrollo Social"><div class="brand-divider"></div><div><strong>CENTRO DE PRENSA</strong><span>MIDES Florida</span></div></div><div class="site-module-actions" aria-label="Navegación del sitio"><a class="site-home-button" href="index.html">⌂ Volver a inicio</a><a class="site-exit-button" href="https://www.gub.uy/ministerio-desarrollo-social/" onclick="return confirm('Vas a salir del Centro de Prensa MIDES Florida. ¿Continuar?')">↗ Salir del sitio</a></div></header>
+<main class="article-main"><article id="article"><p class="eyebrow">COMUNICADO</p><h1 id="title">Cargando…</h1><p class="article-date" id="date"></p><div id="cover"></div><div class="article-placeholder" id="content"></div><section id="media" class="article-media" hidden><div id="video" hidden></div><div id="gallery" hidden></div><div id="audio" hidden></div></section><div class="download-box"><strong>Material para medios</strong><span>Fotografías · Video · Audio</span></div></article></main>
 <script src="config.js"></script><script>
 const id=new URLSearchParams(location.search).get("id"),api=window.PRENSA_CONFIG?.apiUrl;
-function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function formatDate(v){if(!v)return "";const d=new Date(v+"T00:00:00");return isNaN(d)?v:d.toLocaleDateString("es-UY",{day:"2-digit",month:"long",year:"numeric"});}
-function imageHtml(url,cls=""){if(!/^https?:\/\//i.test(url))return "";return '<img class="'+cls+'" src="'+esc(url)+'" alt="Material fotográfico de la actividad" loading="lazy">'}
+function driveId(url){try{const u=new URL(url);if(!/(^|\.)drive\.google\.com$/i.test(u.hostname))return "";return u.searchParams.get("id")||((u.pathname.match(/\/file\/d\/([^/]+)/)||[])[1]||"")}catch(e){return ""}}
+function imageSource(url){const fid=driveId(url);return fid?"https://drive.google.com/thumbnail?id="+encodeURIComponent(fid)+"&sz=w1400":url}
+function imageHtml(url,cls=""){if(!/^https?:\/\//i.test(url))return "";return '<img class="'+cls+'" src="'+esc(imageSource(url))+'" data-original="'+esc(url)+'" alt="Material fotográfico de la actividad" loading="lazy" onerror="if(this.dataset.retry!==\'1\'){this.dataset.retry=\'1\';this.src=this.dataset.original}else{this.hidden=true;this.parentElement.classList.add(\'image-unavailable\')}">'}
 function videoEmbed(url,fileId){
  try{
-  if(fileId)return '<video class="article-video-player" controls preload="metadata" playsinline src="https://drive.google.com/uc?export=download&id='+encodeURIComponent(fileId)+'"></video>';
-  const u=new URL(url);let src="";
+  if(fileId)return '<h2 class="media-heading">Video de la actividad</h2><div class="article-video"><iframe src="https://drive.google.com/file/d/'+encodeURIComponent(fileId)+'/preview" title="Video del comunicado" loading="lazy" allow="autoplay; fullscreen" allowfullscreen></iframe></div>';
+  if(!url)return "";
+  const u=new URL(url);let src="",isVideo=false;
   if(u.hostname.includes("youtube.com")){const v=u.searchParams.get("v");if(v)src="https://www.youtube.com/embed/"+encodeURIComponent(v)}
   else if(u.hostname==="youtu.be"){src="https://www.youtube.com/embed/"+encodeURIComponent(u.pathname.slice(1))}
   else if(u.hostname.includes("vimeo.com")){const m=u.pathname.match(/\/(\d+)/);if(m)src="https://player.vimeo.com/video/"+m[1]}
-  return src?'<iframe src="'+esc(src)+'" title="Video relacionado" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>':"";
+  else {const fid=driveId(url);if(fid)src="https://drive.google.com/file/d/"+encodeURIComponent(fid)+"/preview";else if(/\.(mp4|webm|ogg)(\?|$)/i.test(u.href))return '<h2 class="media-heading">Video de la actividad</h2><video class="article-video-player" controls preload="metadata" playsinline src="'+esc(url)+'"></video>'}
+  return src?'<h2 class="media-heading">Video de la actividad</h2><div class="article-video"><iframe src="'+esc(src)+'" title="Video del comunicado" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe></div>':"";
  }catch(e){return ""}
 }
-async function load(){if(!api||!id){showError();return}try{const r=await fetch(api+"?action=get&id="+encodeURIComponent(id),{cache:"no-store"}),d=await r.json();if(!d.ok||!d.item){showError();return}const x=d.item;document.title=x.titulo+" | Centro de Prensa";document.getElementById("title").textContent=x.titulo;document.getElementById("date").textContent=formatDate(x.fecha)+" · "+x.tag;document.getElementById("content").innerHTML=esc(x.contenido).replace(/\n/g,"<br>");
- if(x.fotoPrincipal){document.getElementById("cover").innerHTML=imageHtml(x.fotoPrincipal,"article-cover");}
- const photos=(x.fotos||[]).filter(Boolean);let media=false;
- if(photos.length){document.getElementById("gallery").innerHTML=photos.map(p=>imageHtml(p,"article-gallery-image")).join("");media=true;}
- const ve=videoEmbed(x.videoUrl||"",x.videoDriveFileId||"");if(ve){document.getElementById("video").innerHTML=ve;document.getElementById("video").hidden=false;media=true;} if(x.audioUrl){document.getElementById("audio").innerHTML="<p><strong>Nota de audio</strong></p><audio controls preload=\"metadata\" src=\""+esc(x.audioUrl)+"\"></audio>";document.getElementById("audio").hidden=false;media=true;}
+function renderGallery(photos){
+ const host=document.getElementById("gallery");if(!photos.length)return false;
+ host.hidden=false;host.innerHTML='<h2 class="media-heading">Galería de fotografías</h2><div class="article-gallery"><div class="gallery-frame" id="galleryFrame"></div><div class="gallery-controls"><button type="button" id="galleryPrev" aria-label="Fotografía anterior">← Anterior</button><span class="gallery-counter" id="galleryCounter"></span><button type="button" id="galleryNext" aria-label="Fotografía siguiente">Siguiente →</button></div></div>';
+ let current=0;const frame=document.getElementById("galleryFrame"),counter=document.getElementById("galleryCounter");
+ function show(n){current=(n+photos.length)%photos.length;frame.innerHTML=imageHtml(photos[current],"article-gallery-image");counter.textContent=(current+1)+" / "+photos.length;const img=frame.querySelector("img");if(img)img.addEventListener("click",()=>window.open(photos[current],"_blank","noopener"));document.getElementById("galleryPrev").disabled=photos.length<2;document.getElementById("galleryNext").disabled=photos.length<2;}
+ document.getElementById("galleryPrev").addEventListener("click",()=>show(current-1));document.getElementById("galleryNext").addEventListener("click",()=>show(current+1));show(0);return true;
+}
+async function load(){if(!api||!id){showError();return}try{const r=await fetch(api+"?action=get&id="+encodeURIComponent(id),{cache:"no-store"}),d=await r.json();if(!d.ok||!d.item){showError();return}const x=d.item;document.title=x.titulo+" | Centro de Prensa";document.getElementById("title").textContent=x.titulo;document.getElementById("date").textContent=[formatDate(x.fecha),x.tag].filter(Boolean).join(" · ");document.getElementById("content").innerHTML=esc(x.contenido).replace(/\n/g,"<br>");
+ if(x.fotoPrincipal){document.getElementById("cover").innerHTML='<div class="article-cover-wrap">'+imageHtml(x.fotoPrincipal,"article-cover")+'</div>';}
+ let media=false;const video=videoEmbed(x.videoUrl||"",x.videoDriveFileId||"");if(video){document.getElementById("video").innerHTML=video;document.getElementById("video").hidden=false;media=true;}
+ const photos=(x.fotos||[]).filter(p=>/^https?:\/\//i.test(p));if(renderGallery(photos))media=true;
+ if(x.audioUrl){document.getElementById("audio").innerHTML='<h2 class="media-heading">Nota de audio</h2><audio controls preload="metadata" src="'+esc(x.audioUrl)+'" style="width:100%"></audio>';document.getElementById("audio").hidden=false;media=true;}
  document.getElementById("media").hidden=!media;
- }catch(e){showError()}}
+ }catch(e){console.error(e);showError()}}
 function showError(){document.getElementById("title").textContent="Comunicado no disponible";document.getElementById("date").textContent="";document.getElementById("content").textContent="El contenido solicitado no está publicado o no se encuentra disponible."}
 load();
 </script></body></html>
