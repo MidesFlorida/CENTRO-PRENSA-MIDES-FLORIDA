@@ -270,7 +270,7 @@ function listFuncionarios_(){
 function findFuncionario_(id){return listFuncionarios_().find(x=>String(x.id)===String(id))||null;}
 function findFuncionarioByCredentials_(nombre,area,password){
  const n=normalizeText_(nombre),a=normalizeText_(area),p=String(password||'');
- const u=listFuncionarios_().find(x=>x.estado==='Activo'&&x.rol==='Funcionario'&&normalizeText_(x.nombre)===n&&normalizeText_(x.area)===a&&x.password===p)||null;
+ const u=listFuncionarios_().find(x=>normalizeText_(x.estado)==='activo'&&normalizeText_(x.rol)==='funcionario'&&normalizeText_(x.nombre)===n&&normalizeText_(x.area)===a&&String(x.password||'')===p)||null;
  if(u)try{
    const sh=ensureFuncionarioHeaders_(),rows=sh.getDataRange().getValues(),idx=rows.findIndex(r=>String(r[0])===u.id);
    if(idx>0){sh.getRange(idx+1,11).setValue(formatDateTime_(new Date()));SpreadsheetApp.flush();}
