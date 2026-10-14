@@ -31,11 +31,19 @@ function ensureHeaders_(sh,headers){
   if(changed)sh.getRange(1,1,1,width).setValues([current]);
 }
 function prepararHojasCentroPrensa_(){
-  // Crea/normaliza todas las hojas persistentes del Centro de Prensa.
+  // Inicialización idempotente: crea o normaliza hojas sin borrar filas ni pestañas.
   getSheet_();
   ensureContactsStructure_();
+  getNamedSheet_(CONTACTS_SHEET,CONTACT_HEADERS);
+  getMailingSheet_();
   getFuncionarioSheet_();
   getAgendaSheet_();
+  const normalized=getSpreadsheet_().getSheetByName(CONTACTS_SHEET);
+  const source=contactSource_();
+  // Importa solo en el primer arranque de una hoja normalizada vacía.
+  if(normalized && normalized.getLastRow()<2 && source.sheet && source.rows.length>1){
+    syncContactsNormalized_();
+  }
 }
 
 function autorizarCentroPrensa(){
@@ -57,7 +65,17 @@ function autorizarCentroPrensa(){
   return 'Autorización de Google Sheets, Drive y solicitudes externas completada correctamente.';
 }
 
-function setup(){prepararHojasCentroPrensa_();const sh=getSheet_();sh.getRange(1,1,1,HEADERS.length).setValues([HEADERS]);sh.setFrozenRows(1);return json_({ok:true,sheets:[CONFIG.sheetName,CONTACT_SOURCE_SHEET,CONTACTS_SHEET,LISTS_SHEET,MEMBERSHIPS_SHEET,CAMPAIGNS_SHEET,'Mailings',FUNC_SHEET,AGENDA_SHEET]});}
+function setup(){
+  prepararHojasCentroPrensa_();
+  const sh=getSheet_();
+  ensureHeaders_(sh,HEADERS);
+  sh.setFrozenRows(1);
+  SpreadsheetApp.flush();
+  const diagnostic=diagnosticoHojasCentroPrensa_();
+  const missing=diagnostic.filter(x=>!x.existe).map(x=>x.nombre);
+  if(missing.length)throw new Error('Faltan hojas después de inicializar: '+missing.join(', '));
+  return json_({ok:true,message:'Estructura inicializada y verificada sin borrar datos existentes.',sheets:diagnostic});
+}
 function doGet(e){
   try{
     const a=(e&&e.parameter&&e.parameter.action)||'list';
@@ -87,7 +105,9 @@ function getNamedSheet_(name,headers){
 }
 function diagnosticoHojasCentroPrensa_(){
  const ss=getSpreadsheet_(),keep=[CONFIG.sheetName,CONTACT_SOURCE_SHEET,CONTACTS_SHEET,LISTS_SHEET,MEMBERSHIPS_SHEET,CAMPAIGNS_SHEET,'Mailings',FUNC_SHEET,AGENDA_SHEET];
- return ss.getSheets().map(sh=>({nombre:sh.getName(),filas:sh.getLastRow(),columnas:sh.getLastColumn(),oficial:keep.includes(sh.getName()),vacia:sh.getLastRow()<=1}));
+ const actual=ss.getSheets().map(sh=>({nombre:sh.getName(),filas:sh.getLastRow(),columnas:sh.getLastColumn(),oficial:keep.includes(sh.getName()),vacia:sh.getLastRow()<=1,existe:true}));
+ const missing=keep.filter(name=>!ss.getSheetByName(name)).map(nombre=>({nombre,filas:0,columnas:0,oficial:true,vacia:true,existe:false}));
+ return actual.concat(missing);
 }
 function normalizeHeader_(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');}
 function contactHeaderMap_(sh){const h=sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0],m={};h.forEach((x,i)=>m[normalizeHeader_(x)]=i);return m;}
@@ -320,7 +340,7 @@ function doPost(e){
     // Acceso editorial directo: únicamente la clave exacta Ik3r2026.
     if(String(p.key||'')!==CONFIG.adminKey)return json_({ok:false,error:'Clave editorial incorrecta'});
     if(p.action==='adminList'){return json_({ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))});}
-    if(p.action==='funcionariosList')return json_({ok:true,items:listFuncionarios_()});
+    if(p.action==='funcionariosList')return json_({ok:true,items:listFuncionarios_().map(u=>({id:u.id,nombre:u.nombre,area:u.area,rol:u.rol,color:u.color,estado:u.estado,fechaCreacion:u.fechaCreacion,debeCambiarPassword:u.debeCambiarPassword,fechaCambioPassword:u.fechaCambioPassword,ultimoAcceso:u.ultimoAcceso}))});
     if(p.action==='funcionarioSave')return json_({ok:true,item:saveFuncionario_(p)});
     if(p.action==='funcionarioDelete')return json_({ok:true,item:deleteFuncionario_(p.id)});
     if(p.action==='adminAgendaList')return json_({ok:true,items:adminCalendar_(p)});
