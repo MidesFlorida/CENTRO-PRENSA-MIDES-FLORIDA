@@ -124,7 +124,13 @@ async function post(action,extra={}){
  const k=key();if(!k)throw new Error("No se ingresó la clave editorial");
  if(!window.PRENSA_CONFIG?.apiUrl)throw new Error("Falta configurar apiUrl en config.js");
  const body=new URLSearchParams({action,key:k,...extra});
- const res=await fetch(window.PRENSA_CONFIG.apiUrl,{method:"POST",body});
+ let res;
+ try{
+  res=await fetch(window.PRENSA_CONFIG.apiUrl,{method:"POST",body,cache:"no-store",redirect:"follow"});
+ }catch(networkError){
+  const detail=String(networkError&&networkError.message||networkError||"Error de red");
+  throw new Error("No se pudo conectar con Apps Script ("+detail+"). Verificá que config.js apunte a la URL /exec de la implementación vigente y que la implementación permita acceso a cualquier usuario. Si el error ocurre al cargar archivos, revisá también la autorización de Google Drive.");
+ }
  const raw=await res.text();
  let data;
  try{data=JSON.parse(raw)}catch(_){throw new Error("La API devolvió una respuesta no válida (HTTP "+res.status+"). "+raw.replace(/\s+/g," ").slice(0,240))}
