@@ -26,7 +26,12 @@ async function load(){
  try{
   const res=await fetch(window.PRENSA_CONFIG.apiUrl+"?action=list",{cache:"no-store"}),data=await res.json();
   if(!data.ok)throw new Error(data.error||"Error de API");
-  items=Array.isArray(data.items)?data.items:[];render();
+  // La portada y la sección Actualidad muestran únicamente comunicados publicados.
+  // Normalizamos espacios, mayúsculas y caracteres acentuados para evitar que
+  // una variación del estado en Sheets oculte comunicados válidos.
+  const normalizeStatus=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase();
+  items=(Array.isArray(data.items)?data.items:[]).filter(item=>normalizeStatus(item.estado)==="publicado");
+  render();
  }catch(e){console.error(e);grid.innerHTML='<div class="empty">No fue posible consultar los comunicados en este momento.</div>';count.textContent="";}
 }
 search.addEventListener("input",render);category.addEventListener("change",render);load();
