@@ -20,17 +20,21 @@ function render(){
   return published&&matchesQuery&&(!c||String(x.categoria||"").toLowerCase()===c.toLowerCase());
  });
  count.textContent=data.length+" "+(data.length===1?"comunicado publicado":"comunicados publicados");
- grid.classList.remove("news-grid");
- grid.classList.add("draft-list","public-press-list");
- grid.innerHTML=data.map(x=>`<article class="draft-item public-draft-item">
-  <div class="public-draft-copy">
-   <span class="draft-meta">${esc(formatDate(x.fecha))} · ${esc(x.categoria||"Comunicado")}</span>
-   <h3>${esc(x.titulo||"Comunicado MIDES Florida")}</h3>
-   <p>${esc(x.resumen||"Comunicado oficial de MIDES Florida.")}</p>
-   ${mediaBadges(x)}
-  </div>
-  <div class="public-draft-actions"><a class="public-view-link" href="comunicado.html?id=${encodeURIComponent(x.id)}">Ver comunicado y material →</a></div>
- </article>`).join("")||'<div class="empty public-empty">No hay comunicados publicados que coincidan con la búsqueda.</div>';
+ grid.classList.remove("draft-list","public-press-list");
+ grid.classList.add("news-grid","public-vertical-grid");
+ grid.innerHTML=data.map(x=>{
+  const photo=String(x.fotoPrincipal||"").trim();
+  const photoMarkup=photo
+   ? '<div class="public-card-image"><img src="'+esc(publicImageUrl(photo))+'" data-original="'+esc(photo)+'" alt="'+esc(x.titulo||"Foto destacada del comunicado")+'" loading="lazy" onerror="cardImageError(this)"></div>'
+   : '<div class="public-card-image public-card-image-placeholder"><span>MIDES Florida</span></div>';
+  return '<article class="news-card public-vertical-card">'+photoMarkup+
+   '<div class="news-body public-vertical-body">'+
+    '<div class="public-card-meta">'+esc(x.categoria||"Comunicado")+(x.fecha?' · '+esc(formatDate(x.fecha)):"")+'</div>'+
+    '<h3>'+esc(x.titulo||"Comunicado MIDES Florida")+'</h3>'+
+    '<p>'+esc(x.resumen||"Comunicado oficial de MIDES Florida.")+'</p>'+
+    '<a class="public-card-button" href="comunicado.html?id='+encodeURIComponent(x.id)+'">Ver comunicado <span aria-hidden="true">→</span></a>'+
+   '</div></article>';
+ }).join("")||'<div class="empty public-empty">No hay comunicados publicados que coincidan con la búsqueda.</div>';
 }
 function requestJsonp(url){
  return new Promise((resolve,reject)=>{
