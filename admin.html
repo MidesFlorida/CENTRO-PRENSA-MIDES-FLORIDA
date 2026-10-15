@@ -94,20 +94,19 @@ const $=id=>document.getElementById(id),today=new Date().toISOString().slice(0,1
 $("date").value=today;
 function showNotice(t,type="success"){const n=$("notice");if(n){n.textContent=t;n.className="toast "+type;n.hidden=false;clearTimeout(window.noticeTimer);window.noticeTimer=setTimeout(()=>n.hidden=true,6500)}const s=$("action-status");if(s){s.textContent=t;s.className="action-status "+type}}
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
-function key(){return editorialAuthorized?(window.PRENSA_CONFIG?.adminKey||"Ik3r2026"):""}
+function key(){return editorialAuthorized?(editorKey||window.PRENSA_CONFIG?.adminKey||"Ik3r2026"):""}
 async function authorizeEditorial(){
   if(editorialAuthorized)return true;
   // Cada nueva carga del panel exige ingresar nuevamente la contraseña editorial.
   const input=$("editor-auth-password"),screen=$("editor-auth-screen"),error=$("editor-auth-error");
   const k=String(input?.value||"");
-  if(k!=="Ik3r2026"){
+  const validKeys=["Ik3r2026","Svelez2026"];
+  if(!validKeys.includes(k)){
     if(error){error.textContent="⚠ Contraseña incorrecta.";error.style.display="block"}
     input?.focus();return false;
   }
-  // La contraseña editorial es única y literal. No se cifra ni se consulta
-  // al servidor para decidir si se cierra la pantalla de acceso.
-  // El servidor recibe la misma clave en cada operación posterior.
-  editorKey="Ik3r2026";
+  // Se conserva la clave ingresada para que el servidor valide la misma.
+  editorKey=k;
   editorialAuthorized=true;
   try{sessionStorage.setItem("mides_editorial_session","authorized")}catch(_){}
   if(screen)screen.classList.add("ok");
