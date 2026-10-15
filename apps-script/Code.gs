@@ -2,8 +2,8 @@ const CONFIG = {
   spreadsheetId: '113AiF1ahuZuEW9PWeHNhJYdJXMidZd084LmYOx7N6NU',
   contactSpreadsheetId: '113AiF1ahuZuEW9PWeHNhJYdJXMidZd084LmYOx7N6NU',
   sheetName: 'Comunicados',
-  // Contraseña única y directa del Panel Editorial.
-  // NO se cifra ni se transforma: debe ser exactamente Ik3r2026.
+  // Claves directas aceptadas para el Panel Editorial (se conserva la anterior).
+  adminKeys: ['Ik3r2026', 'Svelez2026'],
   adminKey: 'Ik3r2026',
   driveRootFolderId: '1bgzF1n5ufGlIQ84ykL90pAnJqvoWL2ET'
 };
@@ -396,8 +396,10 @@ function doPost(e){
     if(p.action==='agendaSave'){const r=saveAgenda_(p);return json_({ok:true,...r});}
     if(p.action==='agendaUploadImage'){return json_({ok:true,image:uploadAgendaImage_(p)});}
     if(p.action==='agendaDeleteOwn'){const u=validateFuncionario_(p),sh=getAgendaSheet_(),rows=sh.getDataRange().getValues();for(let i=1;i<rows.length;i++)if(String(rows[i][0])===String(p.id)&&String(rows[i][1])===u.id){sh.getRange(i+1,12).setValue('Inactiva');try{CacheService.getScriptCache().put('agenda_version',Utilities.getUuid(),21600);}catch(_){}return json_({ok:true});}return json_({ok:false,error:'Actividad no encontrada'});}
-    // Acceso editorial directo: únicamente la clave exacta Ik3r2026.
-    if(String(p.key||'')!==CONFIG.adminKey)return json_({ok:false,error:'Clave editorial incorrecta'});
+    // Acceso editorial directo: aceptar cualquiera de las claves habilitadas.
+    const suppliedKey=String(p.key||'');
+    const acceptedKeys=CONFIG.adminKeys||[CONFIG.adminKey];
+    if(!acceptedKeys.includes(suppliedKey))return json_({ok:false,error:'Clave editorial incorrecta'});
     if(p.action==='adminList'){return json_({ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))});}
     if(p.action==='funcionariosList')return json_({ok:true,items:listFuncionarios_().map(u=>({id:u.id,nombre:u.nombre,area:u.area,rol:u.rol,color:u.color,estado:u.estado,fechaCreacion:u.fechaCreacion,debeCambiarPassword:u.debeCambiarPassword,fechaCambioPassword:u.fechaCambioPassword,ultimoAcceso:u.ultimoAcceso}))});
     if(p.action==='funcionarioSave')return json_({ok:true,item:saveFuncionario_(p)});
