@@ -131,18 +131,26 @@ async function load(){
  }
 }
 
+function parseActivityDate(value){
+ const raw=String(value||'').trim();
+ if(!raw)return new Date(NaN);
+ // Las fechas de la agenda se guardan como hora local de Uruguay: YYYY-MM-DDTHH:mm:ss.
+ const m=raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);
+ if(m)return new Date(Number(m[1]),Number(m[2])-1,Number(m[3]),Number(m[4]),Number(m[5]),Number(m[6]||0));
+ return new Date(raw);
+}
 function formatActivityDate(value){
- const d=new Date(String(value||'').replace(' ','T'));
+ const d=parseActivityDate(value);
  if(Number.isNaN(d.getTime()))return {day:'—',month:'',weekday:'',full:String(value||'')};
  return {day:d.toLocaleDateString('es-UY',{day:'2-digit'}),month:d.toLocaleDateString('es-UY',{month:'short'}).replace('.','').toUpperCase(),weekday:d.toLocaleDateString('es-UY',{weekday:'long'}),full:d.toLocaleDateString('es-UY',{day:'2-digit',month:'long',year:'numeric'})};
 }
 function renderUpcoming(items){
  const host=document.getElementById('upcomingActivities');if(!host)return;
  const now=new Date();
- const upcoming=(Array.isArray(items)?items:[]).filter(x=>{const d=new Date(String(x.inicio||'').replace(' ','T'));return !Number.isNaN(d.getTime())&&d>=now&&String(x.estado||'Activa').trim().toLowerCase()==='activa';}).sort((a,b)=>String(a.inicio).localeCompare(String(b.inicio))).slice(0,5);
+ const upcoming=(Array.isArray(items)?items:[]).filter(x=>{const d=parseActivityDate(x.inicio);return !Number.isNaN(d.getTime())&&d>=now&&String(x.estado||'Activa').trim().toLowerCase()==='activa';}).sort((a,b)=>String(a.inicio).localeCompare(String(b.inicio))).slice(0,5);
  if(!upcoming.length){host.innerHTML='<div class="empty">No hay próximas actividades publicadas en este momento.</div>';return;}
  host.innerHTML=upcoming.map(x=>{
-  const date=formatActivityDate(x.inicio),dt=new Date(String(x.inicio||'').replace(' ','T')),time=Number.isNaN(dt.getTime())?'':dt.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const date=formatActivityDate(x.inicio),dt=parseActivityDate(x.inicio),time=Number.isNaN(dt.getTime())?'':dt.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit',hour12:false});
   const desc=String(x.descripcion||'').trim(),place=String(x.lugar||'').trim(),image=String(x.imagenUrl||'').trim();
   return '<article class="upcoming-card"><div class="upcoming-date"><span>'+esc(date.month)+'</span><strong>'+esc(date.day)+'</strong><small>'+esc(date.weekday)+'</small></div><div class="upcoming-content"><h3>'+esc(x.actividad||'Actividad institucional')+'</h3><div class="upcoming-meta">'+(time?'<span>◷ '+esc(time)+' h</span>':'')+(place?'<span>⌖ '+esc(place)+'</span>':'')+'</div>'+(desc?'<p>'+esc(desc)+'</p>':'')+(image?'<a class="upcoming-image-link" href="'+esc(image)+'" target="_blank" rel="noopener">Ver imagen de la actividad →</a>':'')+'</div></article>';
  }).join('');
