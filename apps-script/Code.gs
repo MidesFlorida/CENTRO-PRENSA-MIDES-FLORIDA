@@ -115,7 +115,7 @@ function doGet(e){
         .filter(x=>{
           if(normalizeText_(String(x.estado||'Activa').trim())!=='activa')return false;
           const key=String(x.inicio||'').trim().replace('T',' ').slice(0,19);
-          return /^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(key)&&key>=nowKey&&key<=limitKey;
+          return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(key)&&key>=nowKey&&key<=limitKey;
         })
         .sort((x,y)=>String(x.inicio).localeCompare(String(y.inicio)))
         .map(x=>({id:x.id,inicio:x.inicio,fin:x.fin,actividad:x.actividad,lugar:x.lugar,descripcion:x.descripcion,imagenUrl:x.imagenUrl,estado:x.estado}));
