@@ -106,9 +106,14 @@ function doGet(e){
     if(a==='ping') result={ok:true,service:'Centro de Prensa MIDES Florida'};
     else if(a==='list') result={ok:true,items:listPublishedDirect_()};
     else if(a==='upcomingActivities'){
+      // La agenda guarda fecha/hora local de Uruguay. No construir el rango con
+      // toISOString(), porque convierte a UTC y puede excluir actividades del día.
       const now=new Date(),limit=new Date(now.getTime()+90*24*60*60*1000);
-      const items=listAgenda_(now.toISOString().slice(0,19),limit.toISOString().slice(0,19))
-        .filter(x=>String(x.estado||'Activa').toLowerCase()==='activa'&&parseAgendaDate_(x.inicio)>=now)
+      const items=listAgenda_()
+        .filter(x=>{
+          if(normalizeText_(String(x.estado||'Activa').trim())!=='activa')return false;
+          try{const d=parseAgendaDate_(x.inicio);return d>=now&&d<=limit;}catch(_){return false;}
+        })
         .sort((x,y)=>parseAgendaDate_(x.inicio)-parseAgendaDate_(y.inicio))
         .slice(0,50)
         .map(x=>({id:x.id,inicio:x.inicio,fin:x.fin,actividad:x.actividad,lugar:x.lugar,descripcion:x.descripcion,imagenUrl:x.imagenUrl,estado:x.estado}));
@@ -338,7 +343,13 @@ function listAgenda_(from,to){
   const sh=getAgendaSheet_();if(sh.getLastRow()<2)return [];
   const lo=from?parseAgendaDate_(from):new Date(0),hi=to?parseAgendaDate_(to):new Date('2999-12-31T23:59:59');
   const colors={};listFuncionarios_().forEach(u=>{if(u.area&&!colors[normalizeText_(u.area)])colors[normalizeText_(u.area)]=u.color;});
-  const result=sh.getRange(2,1,sh.getLastRow()-1,AGENDA_HEADERS.length).getValues().filter(r=>r[0]&&String(r[11]||'Activa')==='Activa').map(r=>agendaRow_(r,colors)).filter(x=>{const s=parseAgendaDate_(x.inicio),f=parseAgendaDate_(x.fin);return f>=lo&&s<=hi;});
+  const result=sh.getRange(2,1,sh.getLastRow()-1,AGENDA_HEADERS.length).getValues()
+    .filter(r=>r[0]&&normalizeText_(String(r[11]||'Activa').trim())==='activa')
+    .map(r=>agendaRow_(r,colors))
+    .filter(x=>{
+      // Una fila incompleta no debe bloquear la lectura pública de toda la agenda.
+      try{const s=parseAgendaDate_(x.inicio),f=parseAgendaDate_(x.fin);return f>=lo&&s<=hi;}catch(_){return false;}
+    });
   try{cache.put(cacheKey,JSON.stringify(result),30);}catch(_){}
   return result;
 }
