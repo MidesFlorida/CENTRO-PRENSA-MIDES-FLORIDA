@@ -106,16 +106,18 @@ function doGet(e){
     if(a==='ping') result={ok:true,service:'Centro de Prensa MIDES Florida'};
     else if(a==='list') result={ok:true,items:listPublishedDirect_()};
     else if(a==='upcomingActivities'){
-      // La agenda guarda fecha/hora local de Uruguay. No construir el rango con
-      // toISOString(), porque convierte a UTC y puede excluir actividades del día.
-      const now=new Date(),limit=new Date(now.getTime()+90*24*60*60*1000);
+      // Comparar las fechas como hora local de la hoja (Uruguay), no como UTC.
+      // Así no se descartan actividades válidas por diferencias de zona horaria.
+      const nowKey=Utilities.formatDate(new Date(),Session.getScriptTimeZone(),'yyyy-MM-dd HH:mm:ss');
+      const limit=new Date();limit.setDate(limit.getDate()+365);
+      const limitKey=Utilities.formatDate(limit,Session.getScriptTimeZone(),'yyyy-MM-dd HH:mm:ss');
       const items=listAgenda_()
         .filter(x=>{
           if(normalizeText_(String(x.estado||'Activa').trim())!=='activa')return false;
-          try{const d=parseAgendaDate_(x.inicio);return d>=now&&d<=limit;}catch(_){return false;}
+          const key=String(x.inicio||'').trim().replace('T',' ').slice(0,19);
+          return /^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(key)&&key>=nowKey&&key<=limitKey;
         })
-        .sort((x,y)=>parseAgendaDate_(x.inicio)-parseAgendaDate_(y.inicio))
-        .slice(0,50)
+        .sort((x,y)=>String(x.inicio).localeCompare(String(y.inicio)))
         .map(x=>({id:x.id,inicio:x.inicio,fin:x.fin,actividad:x.actividad,lugar:x.lugar,descripcion:x.descripcion,imagenUrl:x.imagenUrl,estado:x.estado}));
       result={ok:true,items};
     }
