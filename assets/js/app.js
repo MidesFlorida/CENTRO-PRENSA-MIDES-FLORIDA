@@ -1,5 +1,6 @@
 const grid=document.getElementById("newsGrid"),search=document.getElementById("search"),category=document.getElementById("category"),count=document.getElementById("resultCount");
 let items=[];
+const REQUIRED_API_VERSION="2026-10-15-jsonp";
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
 function driveFileId(value){
  const raw=String(value||"").trim();if(!raw)return "";
@@ -65,7 +66,7 @@ function requestJsonp(url,action="list"){
   const script=document.createElement("script");
   let finished=false;
   const cleanup=()=>{if(finished)return;finished=true;clearTimeout(timer);delete window[callbackName];script.remove();};
-  const timer=setTimeout(()=>{cleanup();reject(new Error("La API no respondió por JSONP. Hay que actualizar la implementación de Apps Script."));},15000);
+  const timer=setTimeout(()=>{cleanup();reject(new Error("No llegó una respuesta JSONP desde Apps Script. Verificá que la implementación esté publicada con la versión actual de apps-script/Code.gs."));},15000);
   window[callbackName]=(data)=>{cleanup();resolve(data);};
   script.onerror=()=>{cleanup();reject(new Error("No se pudo cargar la respuesta de Google Apps Script."));};
   const endpoint=new URL(url);
@@ -76,6 +77,11 @@ function requestJsonp(url,action="list"){
   script.async=true;
   document.head.appendChild(script);
  });
+}
+function verifyApiVersion(data){
+ if(!data||data.apiVersion!==REQUIRED_API_VERSION||data.jsonpSupported!==true){
+  throw new Error("La implementación de Apps Script está desactualizada. Publicá una nueva versión desde Implementar → Gestionar implementaciones → Editar → Nueva versión. Versión requerida: "+REQUIRED_API_VERSION+".");
+ }
 }
 async function load(){
  if(!grid||!search||!category||!count)return;
@@ -88,6 +94,7 @@ async function load(){
  try{
   // JSONP evita el bloqueo CORS de Google Apps Script al consultarlo desde GitHub Pages.
   const data=await requestJsonp(window.PRENSA_CONFIG.apiUrl);
+  verifyApiVersion(data);
   if(!data||data.ok!==true)throw new Error(data?.error||"La API no confirmó la consulta");
   if(!Array.isArray(data.items))throw new Error("La API respondió, pero no entregó una lista de comunicados");
   // La API pública ya filtra por estado; no se vuelve a filtrar en el navegador.
@@ -122,6 +129,7 @@ async function loadUpcoming(){
  if(!window.PRENSA_CONFIG?.apiUrl){host.innerHTML='<div class="empty">La agenda institucional está pendiente de conexión.</div>';return;}
  try{
   const data=await requestJsonp(window.PRENSA_CONFIG.apiUrl,'upcomingActivities');
+  verifyApiVersion(data);
   if(!data||data.ok!==true||!Array.isArray(data.items))throw new Error(data?.error||'La agenda no devolvió actividades');
   renderUpcoming(data.items);
  }catch(e){
