@@ -139,7 +139,7 @@ function formatActivityDate(value){
 function renderUpcoming(items){
  const host=document.getElementById('upcomingActivities');if(!host)return;
  const now=new Date();
- const upcoming=(Array.isArray(items)?items:[]).filter(x=>{const d=new Date(String(x.inicio||'').replace(' ','T'));return !Number.isNaN(d.getTime())&&d>=now&&String(x.estado||'Activa').toLowerCase()==='activa';}).sort((a,b)=>String(a.inicio).localeCompare(String(b.inicio))).slice(0,5);
+ const upcoming=(Array.isArray(items)?items:[]).filter(x=>{const d=new Date(String(x.inicio||'').replace(' ','T'));return !Number.isNaN(d.getTime())&&d>=now&&String(x.estado||'Activa').trim().toLowerCase()==='activa';}).sort((a,b)=>String(a.inicio).localeCompare(String(b.inicio))).slice(0,5);
  if(!upcoming.length){host.innerHTML='<div class="empty">No hay próximas actividades publicadas en este momento.</div>';return;}
  host.innerHTML=upcoming.map(x=>{
   const date=formatActivityDate(x.inicio),dt=new Date(String(x.inicio||'').replace(' ','T')),time=Number.isNaN(dt.getTime())?'':dt.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit',hour12:false});
