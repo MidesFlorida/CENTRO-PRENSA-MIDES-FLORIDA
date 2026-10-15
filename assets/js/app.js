@@ -135,7 +135,7 @@ function parseActivityDate(value){
  const raw=String(value||'').trim();
  if(!raw)return new Date(NaN);
  // Las fechas de la agenda se guardan como hora local de Uruguay: YYYY-MM-DDTHH:mm:ss.
- const m=raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);
+ const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
  if(m)return new Date(Number(m[1]),Number(m[2])-1,Number(m[3]),Number(m[4]),Number(m[5]),Number(m[6]||0));
  return new Date(raw);
 }
