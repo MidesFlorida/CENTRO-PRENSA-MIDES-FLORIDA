@@ -64,11 +64,34 @@ function requestJsonp(url,action="list"){
  return new Promise((resolve,reject)=>{
   const callbackName="__prensaJsonp_"+Date.now()+"_"+Math.random().toString(36).slice(2);
   const script=document.createElement("script");
-  let finished=false;
-  const cleanup=()=>{if(finished)return;finished=true;clearTimeout(timer);delete window[callbackName];script.remove();};
-  const timer=setTimeout(()=>{cleanup();reject(new Error("No llegó una respuesta JSONP desde Apps Script. Verificá que la implementación esté publicada con la versión actual de apps-script/Code.gs."));},15000);
+  let finished=false,loadTimer=null;
+  const timer=setTimeout(()=>{
+   cleanup();
+   reject(new Error("La API no respondió por JSONP. Actualizá apps-script/Code.gs en el proyecto de Apps Script y publicá una Nueva versión desde Implementar → Gestionar implementaciones."));
+  },15000);
+  const cleanup=()=>{
+   if(finished)return;
+   finished=true;
+   clearTimeout(timer);
+   if(loadTimer!==null)clearTimeout(loadTimer);
+   delete window[callbackName];
+   script.remove();
+  };
   window[callbackName]=(data)=>{cleanup();resolve(data);};
-  script.onerror=()=>{cleanup();reject(new Error("No se pudo cargar la respuesta de Google Apps Script."));};
+  script.onerror=()=>{
+   cleanup();
+   reject(new Error("No se pudo cargar la respuesta de Google Apps Script. Verificá que la URL de la API y el acceso del Web App sean correctos."));
+  };
+  // Una versión antigua puede devolver JSON sin ejecutar la función callback.
+  // En ese caso la etiqueta script carga, pero JSONP nunca completa la petición.
+  script.onload=()=>{
+   if(finished)return;
+   loadTimer=setTimeout(()=>{
+    if(finished)return;
+    cleanup();
+    reject(new Error("Google Apps Script respondió, pero no ejecutó la función JSONP. La implementación publicada está desactualizada: publicá una Nueva versión con el contenido de apps-script/Code.gs."));
+   },350);
+  };
   const endpoint=new URL(url);
   endpoint.searchParams.set("action",action);
   endpoint.searchParams.set("callback",callbackName);
