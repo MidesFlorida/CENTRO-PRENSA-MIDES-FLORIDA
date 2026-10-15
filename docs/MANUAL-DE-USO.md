@@ -1,7 +1,17 @@
-# Manual de uso
-## Centro de Prensa — MIDES Florida
+![Logo oficial del Ministerio de Desarrollo Social](../assets/logo-mides.png)
 
-**Documento de apoyo para la presentación y capacitación del equipo de trabajo**
+<div align="center">
+
+# CENTRO DE PRENSA — MIDES FLORIDA
+### Manual de uso para el equipo de trabajo
+
+**Guía práctica · Versión octubre 2026**
+
+</div>
+
+> Identidad institucional: se utiliza el logotipo oficial del MIDES y la paleta azul institucional del sitio. El logo se encuentra en `assets/logo-mides.png`.
+
+---
 
 Sitio web: https://pablocerrutti.github.io/CENTRO-PRENSA-MIDES-FLORIDA/
 
