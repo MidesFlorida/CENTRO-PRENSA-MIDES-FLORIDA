@@ -1,4 +1,4 @@
-![Logo oficial del Ministerio de Desarrollo Social](../assets/logo-mides.png)
+![Logo oficial del Ministerio de Desarrollo Social](https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png)
 
 <div align="center">
 
