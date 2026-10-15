@@ -18,8 +18,9 @@
 7. Ejecutar autorizarCentroPrensa una vez y aceptar los permisos de Google Sheets, Drive y servicios asociados.
 8. Ir a **Implementar → Gestionar implementaciones**, abrir la implementación web existente y pulsar **Editar**. Elegir **Nueva versión** y desplegar. Mantener la ejecución como el propietario y el acceso que ya usa la plataforma.
 9. Confirmar que la URL /exec de esa implementación coincide con apiUrl en config.js. Si se creó una implementación distinta, actualizar config.js con su URL.
-10. Abrir la API con ?action=ping. Debe devolver JSON con ok:true y el nombre del servicio.
-11. Abrir la sala pública y el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
+10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio, `apiVersion:"2026-10-15-jsonp"` y `jsonpSupported:true`.
+11. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
+12. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Luego, desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
 
 ## Pestañas que administra el sistema
 
@@ -38,8 +39,9 @@ Las pestañas ajenas al sistema no se eliminan automáticamente. Antes de una mi
 ## API
 
 GET público:
-- ?action=ping
-- ?action=list
-- ?action=get&id=ID
+- `?action=ping` — informa la versión del backend.
+- `?action=ping&callback=prensaTest` — comprueba que la respuesta JSONP se ejecuta correctamente desde GitHub Pages.
+- `?action=list`
+- `?action=get&id=ID`
 
 Las operaciones editoriales se envían por POST con la clave editorial. Los cambios en Code.gs de GitHub **no se aplican automáticamente** al despliegue de Apps Script: se debe crear una nueva versión siguiendo los pasos anteriores.
