@@ -102,6 +102,15 @@ function doGet(e){
     const a=(e&&e.parameter&&e.parameter.action)||'list';
     if(a==='ping') result={ok:true,service:'Centro de Prensa MIDES Florida'};
     else if(a==='list') result={ok:true,items:listPublishedDirect_()};
+    else if(a==='upcomingActivities'){
+      const now=new Date(),limit=new Date(now.getTime()+90*24*60*60*1000);
+      const items=listAgenda_(now.toISOString().slice(0,19),limit.toISOString().slice(0,19))
+        .filter(x=>String(x.estado||'Activa').toLowerCase()==='activa'&&parseAgendaDate_(x.inicio)>=now)
+        .sort((x,y)=>parseAgendaDate_(x.inicio)-parseAgendaDate_(y.inicio))
+        .slice(0,50)
+        .map(x=>({id:x.id,inicio:x.inicio,fin:x.fin,actividad:x.actividad,lugar:x.lugar,descripcion:x.descripcion,imagenUrl:x.imagenUrl,estado:x.estado}));
+      result={ok:true,items};
+    }
     else if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&normalizeStatus_(item.estado)==='publicado'?item:null;result={ok:!!publicItem,item:publicItem};}
     else if(a==='mailing'){const item=getMailing_(e.parameter.id);result={ok:!!item,item:item||null};}
     else result={ok:false,error:'Acción GET no válida'};
