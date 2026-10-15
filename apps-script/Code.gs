@@ -8,6 +8,9 @@ const CONFIG = {
   driveRootFolderId: '1bgzF1n5ufGlIQ84ykL90pAnJqvoWL2ET'
 };
 
+// Permite comprobar desde la URL pública qué versión del backend está desplegada.
+const API_VERSION = '2026-10-15-jsonp';
+
 const HEADERS = ['ID','Estado','Fecha','Categoria','Tag','Titulo','Resumen','Contenido','FotoPrincipal','Fotos','VideoURL','VideoDriveFileId','VideoDriveUrl','VideoDriveFolderId','FechaCreacion','FechaActualizacion','AudioURL','AudioDriveFileId','AudioDriveUrl'];
 
 function getSpreadsheet_() {
@@ -115,6 +118,9 @@ function doGet(e){
     else if(a==='mailing'){const item=getMailing_(e.parameter.id);result={ok:!!item,item:item||null};}
     else result={ok:false,error:'Acción GET no válida'};
   }catch(err){result={ok:false,error:String(err)};}
+  // Marca la versión en todas las respuestas para detectar despliegues antiguos.
+  result.apiVersion = API_VERSION;
+  result.jsonpSupported = true;
   // GitHub Pages no puede leer directamente el JSON de Apps Script por CORS.
   // La modalidad JSONP permite la lectura pública sin credenciales ni cambios en Sheets.
   const callback=String((e&&e.parameter&&e.parameter.callback)||'');
