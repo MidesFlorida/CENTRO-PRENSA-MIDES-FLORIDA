@@ -498,7 +498,7 @@ function doPost(e){
     const message=String(err&&err.message?err.message:err);
     // Dar contexto para distinguir un fallo al guardar texto en Sheets de un fallo de Drive.
     const driveFailure=/DriveApp|Google Drive|drive\.googleapis\.com|Acceso denegado/i.test(message);
-    return json_({ok:false,action:action,error:driveFailure
+    return apiResponse_(p,{ok:false,action:action,error:driveFailure
       ? 'La acción "'+action+'" falló al acceder a Google Drive. Si es una carga multimedia, el texto del comunicado debe guardarse primero con la acción save. Para habilitar archivos, sincronizá este Code.gs con Apps Script, ejecutá autorizarCentroPrensa desde el editor, aceptá los permisos y volvé a implementar la aplicación web. Detalle: '+message
       : message});
   }
