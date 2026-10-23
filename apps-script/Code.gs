@@ -454,10 +454,11 @@ function doPost(e){
  * Usa exclusivamente la pestaña Mapa5K y helpers con prefijo mapa5k_.
  * No modifica las hojas ni las funciones editoriales del Centro de Prensa.
  */
+const MAPA5K_SPREADSHEET_ID_ = '1OuIrwtwKQ1mDDTCq-QLuyH-q82Pla2HcKiXqOerDwn4';
 const MAPA5K_HEADERS_ = ['ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles','Color','Visible','PuntosJSON','FechaActualizacion'];
 
 function mapa5kSheet_() {
-  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const ss = SpreadsheetApp.openById(MAPA5K_SPREADSHEET_ID_);
   let sh = ss.getSheetByName('Mapa5K');
   if (!sh) {
     sh = ss.insertSheet('Mapa5K');
@@ -511,17 +512,13 @@ function mapa5kSave_(items) {
       o.visible===false?'false':'true',JSON.stringify(mapa5kParsePoints_(o.puntos)),new Date()];
     const oldRow=rowById[id];
     if(oldRow) sh.getRange(oldRow,1,1,MAPA5K_HEADERS_.length).setValues([row]);
-    else sh.appendRow(row);
+    else { sh.appendRow(row); rowById[id]=sh.getLastRow(); }
   });
-  // El editor envía la lista completa. Solo se eliminan filas de la pestaña exclusiva Mapa5K.
-  for(let i=existing.length-1;i>=0;i--){
-    const id=String(existing[i][0]||'');
-    if(id && !incoming[id]) sh.deleteRow(i+2);
-  }
+  // Guardado acumulativo: un guardado o una lista incompleta nunca borra otros elementos.
+  // Para retirar algo del mapa, marcarlo como "Oculto" desde el editor.
   SpreadsheetApp.flush();
   return mapa5kList_();
 }
-
 function normalizeStatus_(value){return String(value==null?'':value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();}
 function listPublished_(){return readAll_().filter(x=>normalizeStatus_(x.estado)==='publicado').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));}
 // La sala pública lee directamente la hoja para evitar una caché editorial antigua.
