@@ -9,7 +9,7 @@ const CONFIG = {
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-10-23-mapa5k-v2';
+const API_VERSION = '2026-10-23-mapa5k-v3';
 
 const HEADERS = ['ID','Estado','Fecha','Categoria','Tag','Titulo','Resumen','Contenido','FotoPrincipal','Fotos','VideoURL','VideoDriveFileId','VideoDriveUrl','VideoDriveFolderId','FechaCreacion','FechaActualizacion','AudioURL','AudioDriveFileId','AudioDriveUrl'];
 
@@ -123,7 +123,7 @@ function doGet(e){
     }
     else if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&normalizeStatus_(item.estado)==='publicado'?item:null;result={ok:!!publicItem,item:publicItem};}
     else if(a==='mailing'){const item=getMailing_(e.parameter.id);result={ok:!!item,item:item||null};}
-    else if(a==='mapa5kList') result={ok:true,items:mapa5kList_()};
+    else if(a==='mapa5kInicializar') {\n      // Inicialización explícita y segura: crea Mapa5K y sus encabezados si faltan.\n      // Nunca borra filas existentes.\n      result=prepararMapa5K();\n    }\n    else if(a==='mapa5kList') result={ok:true,items:mapa5kList_()};
     else if(a==='mapa5kDiagnostico') {
       const sh=mapa5kSheet_();
       result={ok:true,spreadsheetId:MAPA5K_SPREADSHEET_ID_,sheetName:sh.getName(),headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getDisplayValues()[0],elements:Math.max(0,sh.getLastRow()-1),lastRow:sh.getLastRow()};
