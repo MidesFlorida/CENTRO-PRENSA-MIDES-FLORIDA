@@ -148,6 +148,46 @@ function postEditorJsonp(action,extra,keyValue){
   }catch(err){fail("No se pudo preparar la solicitud: "+String(err&&err.message||err))}
  });
 }
+const IFRAME_UPLOAD_ACTIONS=new Set(["uploadVideoStart","uploadVideoChunk","uploadVideoComplete","uploadImages","uploadCover","uploadAudio"]);
+function postEditorIframe(action,extra,keyValue){
+ return new Promise((resolve,reject)=>{
+  const endpoint=window.PRENSA_CONFIG?.apiUrl;
+  if(!endpoint){reject(new Error("Falta configurar apiUrl en config.js"));return}
+  const token="midesIframe_"+Date.now()+"_"+Math.floor(Math.random()*1000000000);
+  const frameName="midesApiFrame_"+token;
+  const frame=document.createElement("iframe");
+  frame.name=frameName;frame.title="Conexión segura con Google Apps Script";frame.style.display="none";
+  const form=document.createElement("form");
+  form.method="POST";form.action=endpoint;form.target=frameName;form.enctype="application/x-www-form-urlencoded";form.acceptCharset="UTF-8";form.style.display="none";
+  const payload={action,key:keyValue,...extra,transport:"iframe",transportToken:token};
+  for(const [name,value] of Object.entries(payload)){
+   if(value===undefined||value===null)continue;
+   const input=document.createElement("input");input.type="hidden";input.name=name;
+   input.value=typeof value==="string"?value:String(value);form.appendChild(input);
+  }
+  let timer=null,settled=false;
+  const cleanup=()=>{
+   if(settled)return;settled=true;if(timer)clearTimeout(timer);
+   window.removeEventListener("message",onMessage);
+   form.remove();frame.remove();
+  };
+  const fail=message=>{cleanup();reject(new Error(message))};
+  const onMessage=event=>{
+   if(event.source!==frame.contentWindow)return;
+   const msg=event.data;
+   if(!msg||msg.channel!=="mides-prensa-api"||msg.token!==token)return;
+   const data=msg.response;
+   cleanup();
+   if(!data||typeof data.ok!=="boolean"){reject(new Error("Apps Script devolvió una respuesta de carga no válida."));return}
+   if(!data.ok){reject(new Error(data.error||"Google Apps Script rechazó la carga."));return}
+   resolve(data);
+  };
+  window.addEventListener("message",onMessage);
+  timer=setTimeout(()=>fail("Apps Script no confirmó la carga del archivo dentro del plazo. Revisá los permisos de Google Drive y volvé a intentar."),120000);
+  document.body.appendChild(frame);document.body.appendChild(form);
+  try{form.submit()}catch(err){fail("No se pudo enviar el archivo a Apps Script: "+String(err&&err.message||err))}
+ });
+}
 async function post(action,extra={}){
  const k=key();if(!k)throw new Error("No se ingresó la clave editorial");
  if(!window.PRENSA_CONFIG?.apiUrl)throw new Error("Falta configurar apiUrl en config.js");
@@ -155,6 +195,7 @@ async function post(action,extra={}){
  // puede ser bloqueada por CORS al volver desde script.googleusercontent.com.
  // Las cargas multimedia y módulos con datos personales mantienen el transporte POST.
  if(JSONP_EDITOR_ACTIONS.has(action))return await postEditorJsonp(action,extra,k);
+ if(IFRAME_UPLOAD_ACTIONS.has(action))return await postEditorIframe(action,extra,k);
  const body=new URLSearchParams({action,key:k,...extra});
  let res;
  try{
@@ -255,7 +296,7 @@ $("editor-form").addEventListener("submit",async e=>{
   showNotice((savedItem?"⚠ El borrador se guardó, pero no se pudo completar la verificación: ":"⚠ No se pudo guardar en Google Sheets: ")+err.message,"error");
  }finally{btn.disabled=false;btn.textContent="Guardar borrador"}
 })
-$("publish-btn").addEventListener("click",async()=>{const btn=$("publish-btn");try{btn.disabled=true;btn.textContent="Publicando…";showNotice("Guardando contenido…","success");const hadMedia=pendingImages.length>0||!!pendingVideo||!!pendingAudio;let data;if(hadMedia){data=await post("save",payload());if(!data.item)throw new Error("La API no devolvió el comunicado guardado.");await uploadPendingImages(data.item.id,data.item.titulo);await uploadPendingVideo(data.item.id,data.item.titulo);await uploadPendingAudio(data.item.id,data.item.titulo);const mediaReady=(await post("adminGet",{id:data.item.id})).item;if(!mediaReady)throw new Error("No se pudo verificar el contenido multimedia en Drive.");data=await post("publish",{id:data.item.id});}else{data=await post("savePublish",payload())}if(!data.item)throw new Error("La API no devolvió el comunicado publicado.");const refreshed=(await post("adminGet",{id:data.item.id})).item;fill(refreshed);showNotice("✓ Comunicado publicado correctamente en la sala de prensa.","success");await load()}catch(err){showNotice("⚠ No se pudo publicar: "+err.message,"error")}finally{btn.disabled=false;btn.textContent="Publicar"}})
+$("publish-btn").addEventListener("click",async()=>{const btn=$("publish-btn");try{btn.disabled=true;btn.textContent="Publicando…";showNotice("Guardando contenido…","success");const hadMedia=!!$("coverFile").files?.length||pendingImages.length>0||!!pendingVideo||!!pendingAudio;let data;if(hadMedia){data=await post("save",payload());if(!data.item)throw new Error("La API no devolvió el comunicado guardado.");await uploadPendingCover(data.item.id,data.item.titulo);await uploadPendingImages(data.item.id,data.item.titulo);await uploadPendingVideo(data.item.id,data.item.titulo);await uploadPendingAudio(data.item.id,data.item.titulo);const mediaReady=(await post("adminGet",{id:data.item.id})).item;if(!mediaReady)throw new Error("No se pudo verificar el contenido multimedia en Drive.");data=await post("publish",{id:data.item.id});}else{data=await post("savePublish",payload())}if(!data.item)throw new Error("La API no devolvió el comunicado publicado.");const refreshed=(await post("adminGet",{id:data.item.id})).item;fill(refreshed);showNotice("✓ Comunicado publicado correctamente en la sala de prensa.","success");await load()}catch(err){showNotice("⚠ No se pudo publicar: "+err.message,"error")}finally{btn.disabled=false;btn.textContent="Publicar"}})
 $("clear-btn").addEventListener("click",reset);
 let contacts=[],mailLists=[],selectedContactIds=new Set(),publishedForMailing=[];
 async function loadContactsModule(){try{const r=await post("contactsList");contacts=r.items||[];selectedContactIds=new Set([...selectedContactIds].filter(id=>contacts.some(c=>c.id===id)));renderContacts();showNotice("✓ Contactos sincronizados desde Google Sheets: "+contacts.length,"success")}catch(e){$("contacts-list").innerHTML='<p class="empty-state">⚠ No se pudieron sincronizar los contactos: '+esc(e.message)+'</p>';showNotice("⚠ "+e.message,"error")}}
