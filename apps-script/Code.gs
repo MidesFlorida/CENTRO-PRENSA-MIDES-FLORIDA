@@ -123,6 +123,12 @@ function doGet(e){
     }
     else if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&normalizeStatus_(item.estado)==='publicado'?item:null;result={ok:!!publicItem,item:publicItem};}
     else if(a==='mailing'){const item=getMailing_(e.parameter.id);result={ok:!!item,item:item||null};}
+    else if(a==='mapa5kList') result={ok:true,items:mapa5kList_()};
+    else if(a==='mapa5kSave') {
+      const payload=JSON.parse(String(e.parameter.data||'{}'));
+      if(String(payload.key||'')!==CONFIG.adminKey) throw new Error('Clave de edición del mapa incorrecta.');
+      result={ok:true,items:mapa5kSave_(payload.items||[])};
+    }
     else result={ok:false,error:'Acción GET no válida'};
   }catch(err){result={ok:false,error:String(err)};}
   // Marca la versión en todas las respuestas para detectar despliegues antiguos.
@@ -442,6 +448,80 @@ function doPost(e){
       : message});
   }
 }
+
+/*
+ * Módulo independiente del mapa 5K INJU–MIDES Florida.
+ * Usa exclusivamente la pestaña Mapa5K y helpers con prefijo mapa5k_.
+ * No modifica las hojas ni las funciones editoriales del Centro de Prensa.
+ */
+const MAPA5K_HEADERS_ = ['ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles','Color','Visible','PuntosJSON','FechaActualizacion'];
+
+function mapa5kSheet_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  let sh = ss.getSheetByName('Mapa5K');
+  if (!sh) {
+    sh = ss.insertSheet('Mapa5K');
+    sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setValues([MAPA5K_HEADERS_]);
+    sh.setFrozenRows(1);
+  } else if (sh.getLastRow() === 0) {
+    sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setValues([MAPA5K_HEADERS_]);
+    sh.setFrozenRows(1);
+  } else {
+    const existing = sh.getRange(1,1,1,Math.max(sh.getLastColumn(),MAPA5K_HEADERS_.length)).getValues()[0];
+    const matches = MAPA5K_HEADERS_.every((h,i)=>existing[i]===h);
+    if (!matches) throw new Error('La pestaña Mapa5K ya existe con encabezados diferentes. No se modificó para proteger sus datos.');
+  }
+  return sh;
+}
+
+function mapa5kList_() {
+  const sh = mapa5kSheet_();
+  if (sh.getLastRow() < 2) return [];
+  return sh.getRange(2,1,sh.getLastRow()-1,MAPA5K_HEADERS_.length).getValues()
+    .filter(r=>r[0])
+    .map(r=>({
+      id:String(r[0]), nombre:String(r[1]||''), tipo:String(r[2]||'otros'),
+      geometria:String(r[3]||'punto'), descripcion:String(r[4]||''),
+      horario:String(r[5]||''), detalles:String(r[6]||''), color:String(r[7]||'#0756a4'),
+      visible:String(r[8]).toLowerCase()!=='false', puntos:mapa5kParsePoints_(r[9])
+    }));
+}
+
+function mapa5kParsePoints_(value) {
+  if (Array.isArray(value)) return value;
+  try { const parsed=JSON.parse(String(value||'[]')); return Array.isArray(parsed)?parsed:[]; }
+  catch (_) { return []; }
+}
+
+function mapa5kSave_(items) {
+  if (!Array.isArray(items)) throw new Error('Los elementos del mapa no tienen un formato válido.');
+  if (items.length > 300) throw new Error('El mapa supera el máximo de 300 elementos por guardado.');
+  const sh=mapa5kSheet_();
+  const existing=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,MAPA5K_HEADERS_.length).getValues():[];
+  const rowById={};
+  existing.forEach((r,i)=>{if(r[0])rowById[String(r[0])]=i+2;});
+  const incoming={};
+  items.forEach(o=>{
+    if(!o||!o.id) throw new Error('Hay un elemento del mapa sin identificador.');
+    const id=String(o.id);
+    if(incoming[id]) throw new Error('Hay identificadores duplicados en el mapa.');
+    incoming[id]=true;
+    const row=[id,String(o.nombre||''),String(o.tipo||'otros'),String(o.geometria||'punto'),
+      String(o.descripcion||''),String(o.horario||''),String(o.detalles||''),String(o.color||'#0756a4'),
+      o.visible===false?'false':'true',JSON.stringify(mapa5kParsePoints_(o.puntos)),new Date()];
+    const oldRow=rowById[id];
+    if(oldRow) sh.getRange(oldRow,1,1,MAPA5K_HEADERS_.length).setValues([row]);
+    else sh.appendRow(row);
+  });
+  // El editor envía la lista completa. Solo se eliminan filas de la pestaña exclusiva Mapa5K.
+  for(let i=existing.length-1;i>=0;i--){
+    const id=String(existing[i][0]||'');
+    if(id && !incoming[id]) sh.deleteRow(i+2);
+  }
+  SpreadsheetApp.flush();
+  return mapa5kList_();
+}
+
 function normalizeStatus_(value){return String(value==null?'':value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();}
 function listPublished_(){return readAll_().filter(x=>normalizeStatus_(x.estado)==='publicado').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));}
 // La sala pública lee directamente la hoja para evitar una caché editorial antigua.
