@@ -457,6 +457,18 @@ function doPost(e){
 const MAPA5K_SPREADSHEET_ID_ = '1OuIrwtwKQ1mDDTCq-QLuyH-q82Pla2HcKiXqOerDwn4';
 const MAPA5K_HEADERS_ = ['ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles','Color','Visible','PuntosJSON','FechaActualizacion'];
 
+// Ejecutar manualmente una vez desde Apps Script para crear/verificar la pestaña dedicada.
+// No borra elementos existentes ni toca las hojas del Centro de Prensa.
+function prepararMapa5K() {
+  const sh = mapa5kSheet_();
+  sh.setFrozenRows(1);
+  sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setFontWeight('bold').setBackground('#0756a4').setFontColor('#ffffff');
+  SpreadsheetApp.flush();
+  const result = {ok:true, spreadsheetId:MAPA5K_SPREADSHEET_ID_, sheetName:sh.getName(), headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getValues()[0], elements:Math.max(0,sh.getLastRow()-1)};
+  Logger.log(JSON.stringify(result));
+  return result;
+}
+
 function mapa5kSheet_() {
   const ss = SpreadsheetApp.openById(MAPA5K_SPREADSHEET_ID_);
   let sh = ss.getSheetByName('Mapa5K');
