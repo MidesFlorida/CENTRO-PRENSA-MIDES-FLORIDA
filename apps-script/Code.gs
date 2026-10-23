@@ -126,7 +126,8 @@ function doGet(e){
     else if(a==='mapa5kList') result={ok:true,items:mapa5kList_()};
     else if(a==='mapa5kSave') {
       const payload=JSON.parse(String(e.parameter.data||'{}'));
-      if(String(payload.key||'')!==CONFIG.adminKey) throw new Error('Clave de edición del mapa incorrecta.');
+      const acceptedKeys = Array.isArray(CONFIG.adminKeys) && CONFIG.adminKeys.length ? CONFIG.adminKeys : [CONFIG.adminKey];
+      if(!acceptedKeys.some(k=>String(k||'')===String(payload.key||''))) throw new Error('Clave de edición del mapa incorrecta.');
       result={ok:true,items:mapa5kSave_(payload.items||[])};
     }
     else result={ok:false,error:'Acción GET no válida'};
@@ -482,7 +483,18 @@ function mapa5kSheet_() {
   } else {
     const existing = sh.getRange(1,1,1,Math.max(sh.getLastColumn(),MAPA5K_HEADERS_.length)).getValues()[0];
     const matches = MAPA5K_HEADERS_.every((h,i)=>existing[i]===h);
-    if (!matches) throw new Error('La pestaña Mapa5K ya existe con encabezados diferentes. No se modificó para proteger sus datos.');
+    if (!matches) {
+      // Es seguro corregir encabezados si la hoja no contiene registros; nunca se pisan datos.
+      if (sh.getLastRow() <= 1) {
+        sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setValues([MAPA5K_HEADERS_]);
+        if (sh.getLastColumn() > MAPA5K_HEADERS_.length) {
+          sh.getRange(1,MAPA5K_HEADERS_.length+1,1,sh.getLastColumn()-MAPA5K_HEADERS_.length).clearContent();
+        }
+        sh.setFrozenRows(1);
+      } else {
+        throw new Error('La pestaña Mapa5K tiene datos pero sus encabezados no coinciden. Para protegerlos, no se modificó automáticamente. Revisá la fila 1.');
+      }
+    }
   }
   return sh;
 }
