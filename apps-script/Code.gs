@@ -123,6 +123,13 @@ function doGet(e){
     }
     else if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&normalizeStatus_(item.estado)==='publicado'?item:null;result={ok:!!publicItem,item:publicItem};}
     else if(a==='mailing'){const item=getMailing_(e.parameter.id);result={ok:!!item,item:item||null};}
+    else if(a==='editorBridge') {
+      // Transporte JSONP para el panel editorial: evita el bloqueo CORS de fetch desde GitHub Pages.
+      // El cliente envía los datos como Base64 UTF-8 dentro de data64.
+      const packed=String((e&&e.parameter&&e.parameter.data64)||'');
+      const decoded=Utilities.newBlob(Utilities.base64Decode(packed)).getDataAsString('UTF-8');
+      result=editorBridgeAction_(JSON.parse(decoded));
+    }
     else if(a==='mapa5kInicializar') {
       // Inicialización explícita y segura: crea Mapa5K y sus encabezados si faltan.
       // Nunca borra filas existentes.
@@ -154,6 +161,44 @@ function doGet(e){
     return ContentService.createTextOutput(callback+'('+JSON.stringify(result)+');').setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
   return json_(result);
+}
+
+
+/**
+ * Acciones editoriales de bajo volumen servidas mediante JSONP desde doGet.
+ * Las cargas multimedia grandes continúan utilizando doPost.
+ * El mismo control de clave que doPost se aplica antes de cualquier operación.
+ */
+function editorBridgeAction_(p) {
+  p=p||{};
+  const action=String(p.action||'');
+  const suppliedKey=String(p.key||'');
+  const acceptedKeys=Array.isArray(CONFIG.adminKeys)&&CONFIG.adminKeys.length?CONFIG.adminKeys:[CONFIG.adminKey];
+  if(!acceptedKeys.some(k=>String(k||'')===suppliedKey)) throw new Error('Clave editorial incorrecta.');
+  switch(action) {
+    case 'adminList':
+      return {ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))};
+    case 'adminGet':
+      return {ok:true,item:findById_(p.id)};
+    case 'save':
+      return {ok:true,item:save_(p)};
+    case 'savePublish':
+      return {ok:true,item:saveAndPublish_(p)};
+    case 'publish': {
+      const item=setStatus_(p.id,'Publicado');
+      return {ok:!!item,item:item,error:item?null:'No se encontró el comunicado para publicar.'};
+    }
+    case 'unpublish': {
+      const item=setStatus_(p.id,'Borrador');
+      return {ok:!!item,item:item,error:item?null:'No se encontró el comunicado para despublicar.'};
+    }
+    case 'delete': {
+      const deleted=delete_(p.id);
+      return {ok:deleted,error:deleted?null:'No se encontró el comunicado para eliminar.'};
+    }
+    default:
+      throw new Error('La acción no está habilitada para el transporte editorial JSONP: '+action);
+  }
 }
 
 const CONTACT_HEADERS=['ID','Nombre','Apellido','NombreCompleto','Medio','Cargo','Email','Telefono','Localidad','Listas','Estado','Observaciones','FechaActualizacion'];
