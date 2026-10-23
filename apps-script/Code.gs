@@ -9,7 +9,7 @@ const CONFIG = {
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-10-15-jsonp';
+const API_VERSION = '2026-10-23-mapa5k-v2';
 
 const HEADERS = ['ID','Estado','Fecha','Categoria','Tag','Titulo','Resumen','Contenido','FotoPrincipal','Fotos','VideoURL','VideoDriveFileId','VideoDriveUrl','VideoDriveFolderId','FechaCreacion','FechaActualizacion','AudioURL','AudioDriveFileId','AudioDriveUrl'];
 
@@ -124,6 +124,10 @@ function doGet(e){
     else if(a==='get'){const item=findById_(e.parameter.id);const publicItem=item&&normalizeStatus_(item.estado)==='publicado'?item:null;result={ok:!!publicItem,item:publicItem};}
     else if(a==='mailing'){const item=getMailing_(e.parameter.id);result={ok:!!item,item:item||null};}
     else if(a==='mapa5kList') result={ok:true,items:mapa5kList_()};
+    else if(a==='mapa5kDiagnostico') {
+      const sh=mapa5kSheet_();
+      result={ok:true,spreadsheetId:MAPA5K_SPREADSHEET_ID_,sheetName:sh.getName(),headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getDisplayValues()[0],elements:Math.max(0,sh.getLastRow()-1),lastRow:sh.getLastRow()};
+    }
     else if(a==='mapa5kSave') {
       const payload=JSON.parse(String(e.parameter.data||'{}'));
       const acceptedKeys = Array.isArray(CONFIG.adminKeys) && CONFIG.adminKeys.length ? CONFIG.adminKeys : [CONFIG.adminKey];
@@ -541,7 +545,15 @@ function mapa5kSave_(items) {
   // Guardado acumulativo: un guardado o una lista incompleta nunca borra otros elementos.
   // Para retirar algo del mapa, marcarlo como "Oculto" desde el editor.
   SpreadsheetApp.flush();
-  return mapa5kList_();
+  const saved=mapa5kList_();
+  const savedById={};saved.forEach(o=>savedById[String(o.id)]=o);
+  items.forEach(o=>{
+    const check=savedById[String(o.id)];
+    if(!check)throw new Error('Google Sheets no confirmó el registro del elemento: '+String(o.nombre||o.id));
+    if(JSON.stringify(mapa5kParsePoints_(check.puntos))!==JSON.stringify(mapa5kParsePoints_(o.puntos)))
+      throw new Error('Google Sheets no confirmó la geometría del elemento: '+String(o.nombre||o.id));
+  });
+  return saved;
 }
 function normalizeStatus_(value){return String(value==null?'':value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();}
 function listPublished_(){return readAll_().filter(x=>normalizeStatus_(x.estado)==='publicado').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));}
