@@ -483,12 +483,12 @@ function doPost(e){
     if(p.action==='campaignSave')return json_({ok:true,item:saveCampaign_(p)});
     if(p.action==='mailingSave')return json_({ok:true,item:saveMailing_(p)});
     if(p.action==='mailingSend')return json_({ok:true,result:sendMailing_(p.id)});
-    if(p.action==='uploadVideoStart')return json_({ok:true,upload:uploadVideoStart_(p)});
-    if(p.action==='uploadVideoChunk')return json_({ok:true,upload:uploadVideoChunk_(p)});
-    if(p.action==='uploadVideoComplete')return json_({ok:true,upload:uploadVideoComplete_(p)});
-    if(p.action==='uploadImages')return json_({ok:true,images:uploadImages_(p)});
-    if(p.action==='uploadCover')return json_({ok:true,cover:uploadCover_(p)});
-    if(p.action==='uploadAudio')return json_({ok:true,audio:uploadAudio_(p)});
+    if(p.action==='uploadVideoStart')return apiResponse_(p,{ok:true,upload:uploadVideoStart_(p)});
+    if(p.action==='uploadVideoChunk')return apiResponse_(p,{ok:true,upload:uploadVideoChunk_(p)});
+    if(p.action==='uploadVideoComplete')return apiResponse_(p,{ok:true,upload:uploadVideoComplete_(p)});
+    if(p.action==='uploadImages')return apiResponse_(p,{ok:true,images:uploadImages_(p)});
+    if(p.action==='uploadCover')return apiResponse_(p,{ok:true,cover:uploadCover_(p)});
+    if(p.action==='uploadAudio')return apiResponse_(p,{ok:true,audio:uploadAudio_(p)});
     if(p.action==='delete')return json_({ok:delete_(p.id)});
     if(p.action==='publish'){const item=setStatus_(p.id,'Publicado');return json_({ok:!!item,item:item,error:item?null:'No se encontró el comunicado para publicar.'});}
     if(p.action==='unpublish')return json_({ok:setStatus_(p.id,'Borrador'),item:findById_(p.id)});
@@ -807,4 +807,16 @@ function saveAndPublish_(p){const item=save_(p);const sh=getSheet_(),row=findRow
 function delete_(id){const sh=getSheet_(),v=sh.getDataRange().getValues();for(let i=1;i<v.length;i++)if(String(v[i][0])===String(id)){sh.deleteRow(i+1);SpreadsheetApp.flush();invalidateEditorialCache_();return true;}return false;}
 function formatDate_(v){if(!v)return '';if(Object.prototype.toString.call(v)==='[object Date]')return Utilities.formatDate(v,Session.getScriptTimeZone(),'yyyy-MM-dd');return String(v);}
 function formatDateTime_(v){if(!v)return '';if(Object.prototype.toString.call(v)==='[object Date]')return Utilities.formatDate(v,Session.getScriptTimeZone(),'yyyy-MM-dd HH:mm:ss');return String(v);}
+// Devuelve JSON normal a clientes compatibles; para cargas de archivos permite confirmar al editor
+// mediante postMessage desde un iframe, sin depender de CORS entre GitHub Pages y Apps Script.
+function apiResponse_(p,obj){
+  const token=String(p&&p.transportToken||'');
+  if(p&&p.transport==='iframe'&&/^[A-Za-z0-9_-]{16,100}$/.test(token)){
+    const message={channel:'mides-prensa-api',token:token,response:obj};
+    const safe=JSON.stringify(message).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
+    return HtmlService.createHtmlOutput('<!doctype html><html><head><meta charset="utf-8"></head><body><script>parent.postMessage('+safe+',"*");</script></body></html>')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  return json_(obj);
+}
 function json_(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}
