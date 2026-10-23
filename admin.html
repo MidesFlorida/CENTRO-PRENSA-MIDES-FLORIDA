@@ -119,36 +119,6 @@ $("editor-auth-form").addEventListener("submit",async e=>{e.preventDefault();if(
 document.querySelectorAll(".content-filter").forEach(btn=>btn.addEventListener("click",()=>{currentContentFilter=btn.dataset.filter;document.querySelectorAll(".content-filter").forEach(b=>b.classList.toggle("active",b===btn));render();}));
 $("refresh-published").addEventListener("click",()=>load());
 
-const JSONP_EDITOR_ACTIONS=new Set(["adminList","adminGet","save","savePublish","publish","unpublish","delete"]);
-function postEditorJsonp(action,extra,keyValue){
- return new Promise((resolve,reject)=>{
-  const endpoint=window.PRENSA_CONFIG?.apiUrl;
-  if(!endpoint){reject(new Error("Falta configurar apiUrl en config.js"));return}
-  const callback="midesEditorCb_"+Date.now()+"_"+Math.floor(Math.random()*1000000);
-  let script=null,timeout=null,settled=false;
-  const clean=()=>{if(settled)return;settled=true;if(timeout)clearTimeout(timeout);if(script)script.remove();try{delete window[callback]}catch(_){window[callback]=undefined}};
-  const fail=message=>{clean();reject(new Error(message))};
-  try{
-   const payload={action,key:keyValue,...extra};
-   const data64=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-   const sep=endpoint.includes("?")?"&":"?";
-   const src=endpoint+sep+"action=editorBridge&data64="+encodeURIComponent(data64)+"&callback="+encodeURIComponent(callback)+"&_="+Date.now();
-   if(src.length>100000){fail("El comunicado es demasiado extenso para enviarlo por este método. Dividilo en un título, una bajada y un cuerpo más breve, o guardalo como borrador y volvé a intentar.");return}
-   window[callback]=result=>{
-    if(!result||typeof result.ok!=="boolean"){fail("Apps Script respondió en un formato inesperado. Actualizá la implementación web con el Code.gs corregido.");return}
-    if(!result.ok){fail(result.error||"La API rechazó la operación.");return}
-    clean();resolve(result);
-   };
-   script=document.createElement("script");
-   script.async=true;
-   script.onerror=()=>fail("No se pudo conectar mediante JSONP con Apps Script. Verificá que la implementación web esté actualizada y permita acceso a cualquier usuario.");
-   script.src=src;
-   timeout=setTimeout(()=>fail("Apps Script no respondió a tiempo. Comprobá la implementación web y volvé a intentar."),30000);
-   document.head.appendChild(script);
-  }catch(err){fail("No se pudo preparar la solicitud: "+String(err&&err.message||err))}
- });
-}
-const IFRAME_UPLOAD_ACTIONS=new Set(["uploadVideoStart","uploadVideoChunk","uploadVideoComplete","uploadImages","uploadCover","uploadAudio"]);
 function postEditorIframe(action,extra,keyValue){
  return new Promise((resolve,reject)=>{
   const endpoint=window.PRENSA_CONFIG?.apiUrl;
@@ -191,24 +161,9 @@ function postEditorIframe(action,extra,keyValue){
 async function post(action,extra={}){
  const k=key();if(!k)throw new Error("No se ingresó la clave editorial");
  if(!window.PRENSA_CONFIG?.apiUrl)throw new Error("Falta configurar apiUrl en config.js");
- // Las operaciones de texto/editor se envían como JSONP porque la respuesta POST de Apps Script
- // puede ser bloqueada por CORS al volver desde script.googleusercontent.com.
- // Las cargas multimedia y módulos con datos personales mantienen el transporte POST.
- if(JSONP_EDITOR_ACTIONS.has(action))return await postEditorJsonp(action,extra,k);
- if(IFRAME_UPLOAD_ACTIONS.has(action))return await postEditorIframe(action,extra,k);
- const body=new URLSearchParams({action,key:k,...extra});
- let res;
- try{
-  res=await fetch(window.PRENSA_CONFIG.apiUrl,{method:"POST",body,cache:"no-store",redirect:"follow"});
- }catch(networkError){
-  const detail=String(networkError&&networkError.message||networkError||"Error de red");
-  throw new Error("No se pudo conectar con Apps Script ("+detail+"). Verificá que config.js apunte a la URL /exec de la implementación vigente y que la implementación permita acceso a cualquier usuario. Si el error ocurre al cargar archivos, revisá también la autorización de Google Drive.");
- }
- const raw=await res.text();
- let data;
- try{data=JSON.parse(raw)}catch(_){throw new Error("La API devolvió una respuesta no válida (HTTP "+res.status+"). "+raw.replace(/\s+/g," ").slice(0,240))}
- if(!data.ok)throw new Error(data.error||"Error de API");
- return data;
+ // Todo el panel usa un formulario POST oculto y un iframe de respuesta.
+ // Así se conserva el cuerpo fuera de la URL y se evita el bloqueo CORS de fetch.
+ return await postEditorIframe(action,extra,k);
 }
 function activateEditorialModule(id){
   const el=document.getElementById(id);
