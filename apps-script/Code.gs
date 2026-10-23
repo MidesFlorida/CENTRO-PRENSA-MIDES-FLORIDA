@@ -451,48 +451,48 @@ function adminCalendar_(p){return listAgenda_(p.from,p.to);}
 function doPost(e){
   try{
     const p=e&&e.parameter?e.parameter:{};
-    if(p.action==='funcionarioLogin'){const u=findFuncionarioByCredentials_(p.nombre||'',p.area||'',p.password||'');return json_({ok:!!u,user:u||null,error:u?null:'Credenciales de funcionario incorrectas'});}
-    if(p.action==='funcionarioChangePassword'){const u=changeFuncionarioPassword_(p);return json_({ok:true,user:u,message:'Contraseña actualizada correctamente.'});}
-    if(p.action==='agendaList'){validateFuncionario_(p);return json_({ok:true,items:listAgenda_(p.from,p.to)});}
-    if(p.action==='agendaSave'){const r=saveAgenda_(p);return json_({ok:true,...r});}
-    if(p.action==='agendaUploadImage'){return json_({ok:true,image:uploadAgendaImage_(p)});}
-    if(p.action==='agendaDeleteOwn'){const u=validateFuncionario_(p),sh=getAgendaSheet_(),rows=sh.getDataRange().getValues();for(let i=1;i<rows.length;i++)if(String(rows[i][0])===String(p.id)&&String(rows[i][1])===u.id){sh.getRange(i+1,12).setValue('Inactiva');try{CacheService.getScriptCache().put('agenda_version',Utilities.getUuid(),21600);}catch(_){}return json_({ok:true});}return json_({ok:false,error:'Actividad no encontrada'});}
+    if(p.action==='funcionarioLogin'){const u=findFuncionarioByCredentials_(p.nombre||'',p.area||'',p.password||'');return apiResponse_(p,{ok:!!u,user:u||null,error:u?null:'Credenciales de funcionario incorrectas'});}
+    if(p.action==='funcionarioChangePassword'){const u=changeFuncionarioPassword_(p);return apiResponse_(p,{ok:true,user:u,message:'Contraseña actualizada correctamente.'});}
+    if(p.action==='agendaList'){validateFuncionario_(p);return apiResponse_(p,{ok:true,items:listAgenda_(p.from,p.to)});}
+    if(p.action==='agendaSave'){const r=saveAgenda_(p);return apiResponse_(p,{ok:true,...r});}
+    if(p.action==='agendaUploadImage'){return apiResponse_(p,{ok:true,image:uploadAgendaImage_(p)});}
+    if(p.action==='agendaDeleteOwn'){const u=validateFuncionario_(p),sh=getAgendaSheet_(),rows=sh.getDataRange().getValues();for(let i=1;i<rows.length;i++)if(String(rows[i][0])===String(p.id)&&String(rows[i][1])===u.id){sh.getRange(i+1,12).setValue('Inactiva');try{CacheService.getScriptCache().put('agenda_version',Utilities.getUuid(),21600);}catch(_){}return apiResponse_(p,{ok:true});}return apiResponse_(p,{ok:false,error:'Actividad no encontrada'});}
     // Acceso editorial directo: aceptar cualquiera de las claves habilitadas.
     const suppliedKey=String(p.key||'');
     const acceptedKeys=CONFIG.adminKeys||[CONFIG.adminKey];
-    if(!acceptedKeys.includes(suppliedKey))return json_({ok:false,error:'Clave editorial incorrecta'});
-    if(p.action==='adminList'){return json_({ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))});}
-    if(p.action==='funcionariosList')return json_({ok:true,items:listFuncionarios_().map(u=>({id:u.id,nombre:u.nombre,area:u.area,rol:u.rol,color:u.color,estado:u.estado,fechaCreacion:u.fechaCreacion,debeCambiarPassword:u.debeCambiarPassword,fechaCambioPassword:u.fechaCambioPassword,ultimoAcceso:u.ultimoAcceso}))});
-    if(p.action==='funcionarioSave')return json_({ok:true,item:saveFuncionario_(p)});
-    if(p.action==='funcionarioDelete')return json_({ok:true,item:deleteFuncionario_(p.id)});
-    if(p.action==='adminAgendaList')return json_({ok:true,items:adminCalendar_(p)});
-    if(p.action==='diagnosticoHojas')return json_({ok:true,items:diagnosticoHojasCentroPrensa_()});
-    if(p.action==='adminGet')return json_({ok:true,item:findById_(p.id)});
-    if(p.action==='save')return json_({ok:true,item:save_(p)});
-    if(p.action==='savePublish')return json_({ok:true,item:saveAndPublish_(p)});
-    if(p.action==='contactsList')return json_({ok:true,items:listContacts_()});
-    if(p.action==='contactsImport')return json_({ok:true,result:importContacts_()});
-    if(p.action==='contactSave')return json_({ok:true,item:saveContact_(p)});
-    if(p.action==='contactDelete')return json_({ok:true,item:setContactStatus_(p.id,'Inactivo')});
-    if(p.action==='listsList')return json_({ok:true,items:listMailingLists_()});
-    if(p.action==='listSave')return json_({ok:true,item:saveMailingList_(p)});
-    if(p.action==='listDelete')return json_({ok:true,item:setMailingListStatus_(p.id,'Inactiva')});
-    if(p.action==='membershipSave')return json_({ok:true,item:saveMemberships_(p.contactId,p.listIds)});
-    if(p.action==='contactsAssignList')return json_({ok:true,result:addContactsToList_(p.contactIds,p.listId)});
-    if(p.action==='campaignPreview')return json_({ok:true,preview:previewCampaign_(p)});
-    if(p.action==='campaignSave')return json_({ok:true,item:saveCampaign_(p)});
-    if(p.action==='mailingSave')return json_({ok:true,item:saveMailing_(p)});
-    if(p.action==='mailingSend')return json_({ok:true,result:sendMailing_(p.id)});
+    if(!acceptedKeys.includes(suppliedKey))return apiResponse_(p,{ok:false,error:'Clave editorial incorrecta'});
+    if(p.action==='adminList'){return apiResponse_(p,{ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))});}
+    if(p.action==='funcionariosList')return apiResponse_(p,{ok:true,items:listFuncionarios_().map(u=>({id:u.id,nombre:u.nombre,area:u.area,rol:u.rol,color:u.color,estado:u.estado,fechaCreacion:u.fechaCreacion,debeCambiarPassword:u.debeCambiarPassword,fechaCambioPassword:u.fechaCambioPassword,ultimoAcceso:u.ultimoAcceso}))});
+    if(p.action==='funcionarioSave')return apiResponse_(p,{ok:true,item:saveFuncionario_(p)});
+    if(p.action==='funcionarioDelete')return apiResponse_(p,{ok:true,item:deleteFuncionario_(p.id)});
+    if(p.action==='adminAgendaList')return apiResponse_(p,{ok:true,items:adminCalendar_(p)});
+    if(p.action==='diagnosticoHojas')return apiResponse_(p,{ok:true,items:diagnosticoHojasCentroPrensa_()});
+    if(p.action==='adminGet')return apiResponse_(p,{ok:true,item:findById_(p.id)});
+    if(p.action==='save')return apiResponse_(p,{ok:true,item:save_(p)});
+    if(p.action==='savePublish')return apiResponse_(p,{ok:true,item:saveAndPublish_(p)});
+    if(p.action==='contactsList')return apiResponse_(p,{ok:true,items:listContacts_()});
+    if(p.action==='contactsImport')return apiResponse_(p,{ok:true,result:importContacts_()});
+    if(p.action==='contactSave')return apiResponse_(p,{ok:true,item:saveContact_(p)});
+    if(p.action==='contactDelete')return apiResponse_(p,{ok:true,item:setContactStatus_(p.id,'Inactivo')});
+    if(p.action==='listsList')return apiResponse_(p,{ok:true,items:listMailingLists_()});
+    if(p.action==='listSave')return apiResponse_(p,{ok:true,item:saveMailingList_(p)});
+    if(p.action==='listDelete')return apiResponse_(p,{ok:true,item:setMailingListStatus_(p.id,'Inactiva')});
+    if(p.action==='membershipSave')return apiResponse_(p,{ok:true,item:saveMemberships_(p.contactId,p.listIds)});
+    if(p.action==='contactsAssignList')return apiResponse_(p,{ok:true,result:addContactsToList_(p.contactIds,p.listId)});
+    if(p.action==='campaignPreview')return apiResponse_(p,{ok:true,preview:previewCampaign_(p)});
+    if(p.action==='campaignSave')return apiResponse_(p,{ok:true,item:saveCampaign_(p)});
+    if(p.action==='mailingSave')return apiResponse_(p,{ok:true,item:saveMailing_(p)});
+    if(p.action==='mailingSend')return apiResponse_(p,{ok:true,result:sendMailing_(p.id)});
     if(p.action==='uploadVideoStart')return apiResponse_(p,{ok:true,upload:uploadVideoStart_(p)});
     if(p.action==='uploadVideoChunk')return apiResponse_(p,{ok:true,upload:uploadVideoChunk_(p)});
     if(p.action==='uploadVideoComplete')return apiResponse_(p,{ok:true,upload:uploadVideoComplete_(p)});
     if(p.action==='uploadImages')return apiResponse_(p,{ok:true,images:uploadImages_(p)});
     if(p.action==='uploadCover')return apiResponse_(p,{ok:true,cover:uploadCover_(p)});
     if(p.action==='uploadAudio')return apiResponse_(p,{ok:true,audio:uploadAudio_(p)});
-    if(p.action==='delete')return json_({ok:delete_(p.id)});
-    if(p.action==='publish'){const item=setStatus_(p.id,'Publicado');return json_({ok:!!item,item:item,error:item?null:'No se encontró el comunicado para publicar.'});}
-    if(p.action==='unpublish')return json_({ok:setStatus_(p.id,'Borrador'),item:findById_(p.id)});
-    return json_({ok:false,error:'Acción POST no válida'});
+    if(p.action==='delete')return apiResponse_(p,{ok:delete_(p.id)});
+    if(p.action==='publish'){const item=setStatus_(p.id,'Publicado');return apiResponse_(p,{ok:!!item,item:item,error:item?null:'No se encontró el comunicado para publicar.'});}
+    if(p.action==='unpublish')return apiResponse_(p,{ok:setStatus_(p.id,'Borrador'),item:findById_(p.id)});
+    return apiResponse_(p,{ok:false,error:'Acción POST no válida'});
   }catch(err){
     const action=(e&&e.parameter&&e.parameter.action)||'desconocida';
     const message=String(err&&err.message?err.message:err);
