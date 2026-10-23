@@ -449,8 +449,8 @@ function uploadAgendaImage_(p){
 function adminCalendar_(p){return listAgenda_(p.from,p.to);}
 
 function doPost(e){
+  const p=e&&e.parameter?e.parameter:{};
   try{
-    const p=e&&e.parameter?e.parameter:{};
     if(p.action==='funcionarioLogin'){const u=findFuncionarioByCredentials_(p.nombre||'',p.area||'',p.password||'');return apiResponse_(p,{ok:!!u,user:u||null,error:u?null:'Credenciales de funcionario incorrectas'});}
     if(p.action==='funcionarioChangePassword'){const u=changeFuncionarioPassword_(p);return apiResponse_(p,{ok:true,user:u,message:'Contraseña actualizada correctamente.'});}
     if(p.action==='agendaList'){validateFuncionario_(p);return apiResponse_(p,{ok:true,items:listAgenda_(p.from,p.to)});}
