@@ -130,11 +130,6 @@ function doGet(e){
       const decoded=Utilities.newBlob(Utilities.base64Decode(packed)).getDataAsString('UTF-8');
       result=editorBridgeAction_(JSON.parse(decoded));
     }
-    else if(a==='mapa5kInicializar') {
-      // Inicialización explícita y segura: crea Mapa5K y sus encabezados si faltan.
-      // Nunca borra filas existentes.
-      result=prepararMapa5K();
-    }
     else if(a==='mapa5kList') result={ok:true,items:mapa5kList_()};
     else if(a==='mapa5kDiagnostico') {
       const sh=mapa5kSheet_();
@@ -514,16 +509,6 @@ const MAPA5K_HEADERS_ = ['ID','Nombre','Tipo','Geometria','Descripcion','Horario
 
 // Ejecutar manualmente una vez desde Apps Script para crear/verificar la pestaña dedicada.
 // No borra elementos existentes ni toca las hojas del Centro de Prensa.
-function prepararMapa5K() {
-  const sh = mapa5kSheet_();
-  sh.setFrozenRows(1);
-  sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setFontWeight('bold').setBackground('#0756a4').setFontColor('#ffffff');
-  SpreadsheetApp.flush();
-  const result = {ok:true, spreadsheetId:MAPA5K_SPREADSHEET_ID_, sheetName:sh.getName(), headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getValues()[0], elements:Math.max(0,sh.getLastRow()-1)};
-  Logger.log(JSON.stringify(result));
-  return result;
-}
-
 function mapa5kSheet_() {
   const ss = SpreadsheetApp.openById(MAPA5K_SPREADSHEET_ID_);
   let sh = ss.getSheetByName('Mapa5K');
