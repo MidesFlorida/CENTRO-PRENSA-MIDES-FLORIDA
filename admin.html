@@ -94,28 +94,35 @@ const $=id=>document.getElementById(id),today=new Date().toISOString().slice(0,1
 $("date").value=today;
 function showNotice(t,type="success"){const n=$("notice");if(n){n.textContent=t;n.className="toast "+type;n.hidden=false;clearTimeout(window.noticeTimer);window.noticeTimer=setTimeout(()=>n.hidden=true,6500)}const s=$("action-status");if(s){s.textContent=t;s.className="action-status "+type}}
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
-function key(){return editorialAuthorized?(editorKey||window.PRENSA_CONFIG?.adminKey||"Ik3r2026"):""}
+function key(){return editorKey||""}
 async function authorizeEditorial(){
   if(editorialAuthorized)return true;
-  // Cada nueva carga del panel exige ingresar nuevamente la contraseña editorial.
   const input=$("editor-auth-password"),screen=$("editor-auth-screen"),error=$("editor-auth-error");
-  const k=String(input?.value||"");
-  const validKeys=["Ik3r2026","Svelez2026"];
-  if(!validKeys.includes(k)){
-    if(error){error.textContent="⚠ Contraseña incorrecta.";error.style.display="block"}
+  const k=String(input?.value||"").trim();
+  if(!k){
+    if(error){error.textContent="Ingresá la contraseña editorial.";error.style.display="block"}
     input?.focus();return false;
   }
-  // Se conserva la clave ingresada para que el servidor valide la misma.
   editorKey=k;
-  editorialAuthorized=true;
-  try{sessionStorage.setItem("mides_editorial_session","authorized")}catch(_){}
-  if(screen)screen.classList.add("ok");
-  if(error)error.style.display="none";
-  // Intentamos cargar inmediatamente; cualquier problema de API queda
-  // visible dentro del panel y no vuelve a bloquear el acceso.
-  return true;
+  try{
+    const data=await post("adminList");
+    items=data.items||[];
+    editorialAuthorized=true;
+    try{sessionStorage.setItem("mides_editorial_session","authorized")}catch(_){}
+    if(screen)screen.classList.add("ok");
+    if(error)error.style.display="none";
+    $("api-status").textContent="Conectado";
+    render();
+    showNotice("✓ Acceso editorial y conexión con Google Sheets confirmados.","success");
+    return true;
+  }catch(err){
+    editorKey="";
+    editorialAuthorized=false;
+    if(error){error.textContent="No se pudo validar el acceso: "+String(err.message||err);error.style.display="block"}
+    input?.focus();return false;
+  }
 }
-$("editor-auth-form").addEventListener("submit",async e=>{e.preventDefault();if(await authorizeEditorial()){load();}});
+$("editor-auth-form").addEventListener("submit",async e=>{e.preventDefault();await authorizeEditorial();});
 document.querySelectorAll(".content-filter").forEach(btn=>btn.addEventListener("click",()=>{currentContentFilter=btn.dataset.filter;document.querySelectorAll(".content-filter").forEach(b=>b.classList.toggle("active",b===btn));render();}));
 $("refresh-published").addEventListener("click",()=>load());
 
@@ -158,11 +165,46 @@ function postEditorIframe(action,extra,keyValue){
   try{form.submit()}catch(err){fail("No se pudo enviar el archivo a Apps Script: "+String(err&&err.message||err))}
  });
 }
+function postEditorJsonp(action,extra,keyValue){
+ return new Promise((resolve,reject)=>{
+  const endpoint=window.PRENSA_CONFIG?.apiUrl;
+  if(!endpoint){reject(new Error("Falta configurar apiUrl en config.js"));return}
+  const callbackName="midesEditorJsonp_"+Date.now()+"_"+Math.floor(Math.random()*1000000000);
+  const payload={...extra,action,key:keyValue};
+  let script=null,timer=null,settled=false;
+  const cleanup=()=>{
+   if(settled)return;settled=true;
+   if(timer)clearTimeout(timer);
+   if(script)script.remove();
+   try{delete window[callbackName]}catch(_){window[callbackName]=undefined}
+  };
+  window[callbackName]=data=>{
+   cleanup();
+   if(!data||typeof data.ok!=="boolean"){reject(new Error("Apps Script devolvió una respuesta editorial no válida."));return}
+   if(!data.ok){reject(new Error(data.error||"Google Apps Script rechazó la operación."));return}
+   resolve(data);
+  };
+  try{
+   const url=new URL(endpoint);
+   const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+   url.searchParams.set("action","editorBridge");
+   url.searchParams.set("data64",encoded);
+   url.searchParams.set("callback",callbackName);
+   script=document.createElement("script");script.async=true;script.src=url.toString();
+   script.onerror=()=>{cleanup();reject(new Error("No se pudo conectar con el puente editorial JSONP. Verificá que la última versión de apps-script/Code.gs esté implementada en Apps Script."))};
+   timer=setTimeout(()=>{cleanup();reject(new Error("Apps Script no respondió al puente editorial JSONP dentro del plazo. Verificá que la última versión de apps-script/Code.gs esté implementada y que la URL de config.js sea la correcta."))},45000);
+   document.head.appendChild(script);
+  }catch(err){cleanup();reject(err)}
+ });
+}
 async function post(action,extra={}){
- const k=key();if(!k)throw new Error("No se ingresó la clave editorial");
+ const k=key();if(!k)throw new Error("Ingresá la contraseña editorial para continuar.");
  if(!window.PRENSA_CONFIG?.apiUrl)throw new Error("Falta configurar apiUrl en config.js");
- // Todo el panel usa un formulario POST oculto y un iframe de respuesta.
- // Así se conserva el cuerpo fuera de la URL y se evita el bloqueo CORS de fetch.
+ const jsonpActions=["adminList","adminGet","save","savePublish","publish","unpublish","delete"];
+ if(jsonpActions.includes(action)){
+  const encodedSize=JSON.stringify({...extra,action,key:k}).length;
+  if(encodedSize<4500)return await postEditorJsonp(action,extra,k);
+ }
  return await postEditorIframe(action,extra,k);
 }
 function activateEditorialModule(id){
@@ -293,15 +335,8 @@ function renderAdminCalendar(){
 async function loadAdminAgenda(){try{const b=monthBounds(adminAgendaDate),r=await post("adminAgendaList",{from:isoLocal(b.from),to:isoLocal(b.to)});adminAgendaItems=r.items||[];renderAdminCalendar()}catch(e){$("admin-calendar").innerHTML='<p class="empty-state">⚠ No se pudo cargar la agenda: '+esc(e.message)+'</p>';showNotice("⚠ "+e.message,"error")}}
 window.showAdminActivity=id=>{const x=adminAgendaItems.find(a=>a.id===id);if(!x)return;const detail=$("admin-activity-detail");detail.hidden=false;detail.innerHTML='<div class="section-heading"><div><p class="eyebrow blue">DETALLE DE COBERTURA</p><h3>'+esc(x.actividad)+'</h3></div><button type="button" class="ghost" onclick="this.parentElement.parentElement.hidden=true">Cerrar</button></div><div class="admin-detail-grid">'+(x.imagenUrl?'<img src="'+esc(x.imagenUrl)+'" alt="Imagen de '+esc(x.actividad)+'">':"")+'<div><p><strong>Área:</strong> <span style="color:'+esc(x.color)+'">●</span> '+esc(x.area)+'</p><p><strong>Propuesto por:</strong> '+esc(x.nombreUsuario)+'</p><p><strong>Horario:</strong> '+esc(new Date(x.inicio).toLocaleString("es-UY"))+' a '+esc(adminTime(x.fin))+'</p><p><strong>Lugar:</strong> '+esc(x.lugar)+'</p><p><strong>Descripción:</strong> '+esc(x.descripcion||"Sin información complementaria.")+'</p></div></div>';detail.scrollIntoView({behavior:"smooth",block:"center"})};
 $("admin-prev-month").onclick=()=>{adminAgendaDate=new Date(adminAgendaDate.getFullYear(),adminAgendaDate.getMonth()-1,1);loadAdminAgenda()};$("admin-next-month").onclick=()=>{adminAgendaDate=new Date(adminAgendaDate.getFullYear(),adminAgendaDate.getMonth()+1,1);loadAdminAgenda()};$("admin-today").onclick=()=>{adminAgendaDate=new Date();loadAdminAgenda()};
-// Recuperar la autorización solo durante esta sesión de pestaña: no pedir clave al guardar.
-try{
-  if(sessionStorage.getItem("mides_editorial_session")==="authorized"){
-    editorKey=window.PRENSA_CONFIG?.adminKey||"Ik3r2026";
-    editorialAuthorized=true;
-    $("editor-auth-screen")?.classList.add("ok");
-    load();
-  }
-}catch(_){}
+// Por seguridad, al recargar la página se solicita nuevamente la clave.
+// No se guarda ni se reconstruye una contraseña administrativa en el navegador.
 </script>
 </body>
 </html>
