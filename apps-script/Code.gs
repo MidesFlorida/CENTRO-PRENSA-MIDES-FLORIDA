@@ -9,7 +9,7 @@ const CONFIG = {
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-10-23-mapa5k-v4';
+const API_VERSION = '2026-10-23-mapa5k-v5';
 
 const HEADERS = ['ID','Estado','Fecha','Categoria','Tag','Titulo','Resumen','Contenido','FotoPrincipal','Fotos','VideoURL','VideoDriveFileId','VideoDriveUrl','VideoDriveFolderId','FechaCreacion','FechaActualizacion','AudioURL','AudioDriveFileId','AudioDriveUrl'];
 
@@ -138,7 +138,7 @@ function doGet(e){
     else if(a==='mapa5kList') result={ok:true,items:mapa5kList_()};
     else if(a==='mapa5kDiagnostico') {
       const sh=mapa5kSheet_();
-      result={ok:true,spreadsheetId:MAPA5K_SPREADSHEET_ID_,sheetName:sh.getName(),headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getDisplayValues()[0],elements:Math.max(0,sh.getLastRow()-1),lastRow:sh.getLastRow()};
+      result={ok:true,spreadsheetId:MAPA5K_SPREADSHEET_ID_,spreadsheetUrl:'https://docs.google.com/spreadsheets/d/'+MAPA5K_SPREADSHEET_ID_+'/edit',sheetName:sh.getName(),headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getDisplayValues()[0],elements:Math.max(0,sh.getLastRow()-1),lastRow:sh.getLastRow()};
     }
     else if(a==='mapa5kSave') {
       const payload=JSON.parse(String(e.parameter.data||'{}'));
@@ -509,7 +509,9 @@ function doPost(e){
  * Usa exclusivamente la pestaña Mapa5K y helpers con prefijo mapa5k_.
  * No modifica las hojas ni las funciones editoriales del Centro de Prensa.
  */
-const MAPA5K_SPREADSHEET_ID_ = '1OuIrwtwKQ1mDDTCq-QLuyH-q82Pla2HcKiXqOerDwn4';
+// Planilla de datos del mapa 5K INJU–MIDES Florida (la de Google Sheets indicada por el equipo).
+// No modifica CONFIG.spreadsheetId: esa configuración pertenece al Centro de Prensa.
+const MAPA5K_SPREADSHEET_ID_ = '1I77KCptylJ6GX9KnlshDEZSRfK4BGasUOT93fXjBzTo';
 const MAPA5K_HEADERS_ = ['ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles','Color','Visible','PuntosJSON','FechaActualizacion'];
 
 // Ejecutar manualmente una vez desde Apps Script para crear/verificar la pestaña dedicada.
@@ -519,7 +521,7 @@ function prepararMapa5K() {
   sh.setFrozenRows(1);
   sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setFontWeight('bold').setBackground('#0756a4').setFontColor('#ffffff');
   SpreadsheetApp.flush();
-  const result = {ok:true, spreadsheetId:MAPA5K_SPREADSHEET_ID_, sheetName:sh.getName(), headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getValues()[0], elements:Math.max(0,sh.getLastRow()-1)};
+  const result = {ok:true, spreadsheetId:MAPA5K_SPREADSHEET_ID_, spreadsheetUrl:'https://docs.google.com/spreadsheets/d/'+MAPA5K_SPREADSHEET_ID_+'/edit', sheetName:sh.getName(), headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getValues()[0], elements:Math.max(0,sh.getLastRow()-1)};
   Logger.log(JSON.stringify(result));
   return result;
 }
