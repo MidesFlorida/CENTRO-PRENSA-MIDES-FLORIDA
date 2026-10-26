@@ -160,7 +160,7 @@ function postEditorIframe(action,extra,keyValue){
    resolve(data);
   };
   window.addEventListener("message",onMessage);
-  timer=setTimeout(()=>fail("Apps Script no confirmó la carga del archivo dentro del plazo. Revisá los permisos de Google Drive y volvé a intentar."),120000);
+  timer=setTimeout(()=>fail("Apps Script no respondió a la acción \""+action+"\" dentro de 120 segundos. Revisá Apps Script → Ejecuciones para distinguir si falló Google Sheets, Google Drive o el transporte de la solicitud."),120000);
   document.body.appendChild(frame);document.body.appendChild(form);
   try{form.submit()}catch(err){fail("No se pudo enviar el archivo a Apps Script: "+String(err&&err.message||err))}
  });
