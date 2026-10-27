@@ -18,7 +18,7 @@
 7. Ejecutar autorizarCentroPrensa una vez y aceptar los permisos de Google Sheets, Drive y servicios asociados.
 8. Ir a **Implementar → Gestionar implementaciones**, abrir la implementación web existente y pulsar **Editar**. Elegir **Nueva versión** y desplegar. Mantener la ejecución como el propietario y el acceso que ya usa la plataforma.
 9. Confirmar que la URL /exec de esa implementación coincide con apiUrl en config.js. Si se creó una implementación distinta, actualizar config.js con su URL.
-10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio, `apiVersion:"2026-10-26-centro-prensa-v1"` y `jsonpSupported:true`.
+10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-10-26-centro-prensa-v1"`. La sala pública admite temporalmente ambas versiones.
 11. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
 12. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Luego, desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
 
