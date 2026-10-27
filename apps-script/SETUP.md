@@ -7,17 +7,20 @@
 - La clave editorial se administra mediante la propiedad privada `CENTRO_PRENSA_ADMIN_KEY`; no debe escribirse en el código ni en la documentación.
 - La inicialización es idempotente: crea las pestañas que falten y ajusta encabezados, pero no elimina pestañas ni borra filas existentes.
 
-## Clave del Panel Editorial (privada)
+## Clave del Panel Editorial (se crea manualmente)
 
-La clave ya no se guarda en `Code.gs` ni en GitHub. Se almacena como propiedad privada del proyecto de Apps Script:
+La clave no se escribe en `Code.gs`, en `config.js` ni en GitHub. La define el administrador directamente en las propiedades del proyecto de Apps Script.
 
-- Nombre de propiedad: `CENTRO_PRENSA_ADMIN_KEY`.
-- Para crearla sin escribir una clave en el código, primero guardá este `Code.gs`, seleccioná la función `generarClaveEditorialSegura` en el editor de Apps Script y pulsá **Ejecutar**.
-- En el registro de ejecución, copiá el valor que aparece después de `CLAVE EDITORIAL NUEVA` y guardalo en un lugar seguro. Esa clave es la que se ingresa en la pantalla de acceso del panel.
-- La función solo genera una clave si la propiedad todavía no existe; si ya existe, no la reemplaza ni la revela. Para cambiarla, editá o eliminá `CENTRO_PRENSA_ADMIN_KEY` en **Configuración del proyecto → Propiedades de secuencia de comandos** y generá una nueva.
-- No publiques ni compartas el registro de ejecución ni la clave. Las claves anteriores escritas en el código dejan de ser válidas tras desplegar esta versión.
+1. Abrir el proyecto de Apps Script vinculado al Centro de Prensa.
+2. Entrar en **Configuración del proyecto** (icono de engranaje).
+3. Buscar **Propiedades de secuencia de comandos** y pulsar **Añadir propiedad de secuencia de comandos**.
+4. En **Propiedad**, escribir exactamente `CENTRO_PRENSA_ADMIN_KEY`.
+5. En **Valor**, escribir la clave que elijas. Recomendación: una clave única de al menos 20 caracteres, combinando letras y números, sin espacios al principio o al final. No reutilices una contraseña personal.
+6. Guardar las propiedades del proyecto.
+7. Copiar el `Code.gs` actualizado en el editor, guardar y desplegar una **Nueva versión** de la aplicación web existente.
+8. Ingresar en el panel editorial usando exactamente el valor guardado en `CENTRO_PRENSA_ADMIN_KEY`.
 
-Si el ingreso falla por falta de configuración, ejecutá `diagnosticoClaveEditorial` desde Apps Script. Devuelve únicamente si la propiedad existe; nunca revela el valor.
+El código solo lee esa propiedad y no la genera, muestra ni guarda dentro del archivo. Si el acceso falla, ejecutar `diagnosticoClaveEditorial`: informa solamente si la propiedad existe, sin revelar su valor. Asegurate de crear la propiedad en el mismo proyecto de Apps Script que se implementa como aplicación web.
 
 ## Inicialización y verificación
 
@@ -30,7 +33,7 @@ Si el ingreso falla por falta de configuración, ejecutá `diagnosticoClaveEdito
 7. Ejecutar autorizarCentroPrensa una vez y aceptar los permisos de Google Sheets, Drive y servicios asociados.
 8. Ir a **Implementar → Gestionar implementaciones**, abrir la implementación web existente y pulsar **Editar**. Elegir **Nueva versión** y desplegar. Mantener la ejecución como el propietario y el acceso que ya usa la plataforma.
 9. Confirmar que la URL /exec de esa implementación coincide con apiUrl en config.js. Si se creó una implementación distinta, actualizar config.js con su URL.
-10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-10-26-centro-prensa-v2-keyprops"`. La sala pública admite temporalmente esas versiones anteriores.
+10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-10-26-centro-prensa-v3-script-properties"`. La sala pública admite temporalmente esas versiones anteriores.
 11. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
 12. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Luego, desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
 
