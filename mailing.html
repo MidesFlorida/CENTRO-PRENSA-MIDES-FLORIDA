@@ -35,7 +35,7 @@ a.btn{display:inline-block;margin-top:12px;padding:11px 16px;border-radius:9px;b
 const api=window.PRENSA_CONFIG?.apiUrl;
 const id=new URLSearchParams(location.search).get("id");
 const esc=v=>String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-function driveImageId(value){const raw=String(value||"").trim();if(!raw)return "";if(/^[a-zA-Z0-9_-]{20,}$/.test(raw)&&!/^https?:/i.test(raw))return raw;try{const u=new URL(raw);if(!/(^|\\.)drive\\.google\\.com$/i.test(u.hostname)&&u.hostname!=="docs.google.com")return "";return u.searchParams.get("id")||((u.pathname.match(/\\/(?:file\\/d|uc|thumbnail)\\/([^/]+)/)||[])[1]||"")}catch(e){return ""}}
+function driveImageId(value){const raw=String(value||"").trim();if(!raw)return "";if(/^[a-zA-Z0-9_-]{20,}$/.test(raw)&&!/^https?:/i.test(raw))return raw;try{const u=new URL(raw);if(!/(^|\.)drive\.google\.com$/i.test(u.hostname)&&u.hostname!=="docs.google.com")return "";return u.searchParams.get("id")||((u.pathname.match(/\/(?:file\/d|uc|thumbnail)\/([^/]+)/)||[])[1]||"")}catch(e){return ""}}
 function mailingImageUrl(value,stage=0){const raw=String(value||"").trim();if(!raw)return "";const id=driveImageId(raw);if(!id)return raw;const options=["https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1400","https://drive.google.com/uc?export=view&id="+encodeURIComponent(id),"https://drive.google.com/uc?id="+encodeURIComponent(id)];return options[Math.min(stage,options.length-1)]}
 function mailingImageError(img){const original=img.dataset.original||"",stage=Number(img.dataset.retry||0);if(driveImageId(original)&&stage<2){img.dataset.retry=String(stage+1);img.src=mailingImageUrl(original,stage+1);return}img.hidden=true;}
 function render(x){
