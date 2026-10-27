@@ -209,7 +209,7 @@ function postEditorIframe(action,extra,keyValue){
   };
   const fail=message=>{cleanup();reject(new Error(message))};
   const onMessage=event=>{
-   if(event.source!==frame.contentWindow)return;
+   if(!(/^https:\/\/(?:script\.google\.com|(?:[a-z0-9-]+\.)*googleusercontent\.com)$/i.test(event.origin)))return;
    const msg=event.data;
    if(!msg||msg.channel!=="mides-prensa-api"||msg.token!==token)return;
    const data=msg.response;
