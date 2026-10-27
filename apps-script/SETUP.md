@@ -7,6 +7,18 @@
 - La clave editorial actual del servidor es Ik3r2026, igual que la que utiliza el panel.
 - La inicialización es idempotente: crea las pestañas que falten y ajusta encabezados, pero no elimina pestañas ni borra filas existentes.
 
+## Clave del Panel Editorial (privada)
+
+La clave ya no se guarda en `Code.gs` ni en GitHub. Se almacena como propiedad privada del proyecto de Apps Script:
+
+- Nombre de propiedad: `CENTRO_PRENSA_ADMIN_KEY`.
+- Para crearla sin escribir una clave en el código, primero guardá este `Code.gs), seleccioná la función `generarClaveEditorialSegura` en el editor de Apps Script y pulsá **Ejecutar**.
+- En el registro de ejecución, copiá el valor que aparece después de `CLAVE EDITORIAL NUEVA` y guardalo en un lugar seguro. Esa clave es la que se ingresa en la pantalla de acceso del panel.
+- La función solo genera una clave si la propiedad todavía no existe; si ya existe, no la reemplaza ni la revela. Para cambiarla, editá o eliminá `CENTRO_PRENSA_ADMIN_KEY` en **Configuración del proyecto → Propiedades de secuencia de comandos** y generá una nueva.
+- No publiques ni compartas el registro de ejecución ni la clave. Las claves anteriores escritas en el código dejan de ser válidas tras desplegar esta versión.
+
+Si el ingreso falla por falta de configuración, ejecutá `diagnosticoClaveEditorial` desde Apps Script. Devuelve únicamente si la propiedad existe; nunca revela el valor.
+
 ## Inicialización y verificación
 
 1. Abrir la hoja de cálculo configurada en CONFIG.spreadsheetId.
@@ -18,7 +30,7 @@
 7. Ejecutar autorizarCentroPrensa una vez y aceptar los permisos de Google Sheets, Drive y servicios asociados.
 8. Ir a **Implementar → Gestionar implementaciones**, abrir la implementación web existente y pulsar **Editar**. Elegir **Nueva versión** y desplegar. Mantener la ejecución como el propietario y el acceso que ya usa la plataforma.
 9. Confirmar que la URL /exec de esa implementación coincide con apiUrl en config.js. Si se creó una implementación distinta, actualizar config.js con su URL.
-10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-10-26-centro-prensa-v1"`. La sala pública admite temporalmente ambas versiones.
+10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-10-26-centro-prensa-v2-keyprops"`. La sala pública admite temporalmente esas versiones anteriores.
 11. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
 12. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Luego, desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
 
