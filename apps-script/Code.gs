@@ -2,14 +2,54 @@ const CONFIG = {
   spreadsheetId: '113AiF1ahuZuEW9PWeHNhJYdJXMidZd084LmYOx7N6NU',
   contactSpreadsheetId: '113AiF1ahuZuEW9PWeHNhJYdJXMidZd084LmYOx7N6NU',
   sheetName: 'Comunicados',
-  // Claves directas aceptadas para el Panel Editorial (se conserva la anterior).
-  adminKeys: ['Ik3r2026', 'Svelez2026'],
-  adminKey: 'Ik3r2026',
   driveRootFolderId: '1bgzF1n5ufGlIQ84ykL90pAnJqvoWL2ET'
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-10-26-centro-prensa-v1';
+const API_VERSION = '2026-10-26-centro-prensa-v2-keyprops';
+const EDITORIAL_KEY_PROPERTY_ = 'CENTRO_PRENSA_ADMIN_KEY';
+
+// La clave vive en Propiedades del proyecto de Apps Script, no en el código ni en GitHub.
+function obtenerClaveEditorial_() {
+  return String(PropertiesService.getScriptProperties().getProperty(EDITORIAL_KEY_PROPERTY_) || '').trim();
+}
+function validarClaveEditorial_(supplied) {
+  const expected = obtenerClaveEditorial_();
+  if (!expected) {
+    throw new Error('La clave editorial no está configurada en Apps Script. Ejecutá generarClaveEditorialSegura() desde el editor y copiá la clave del registro de ejecución.');
+  }
+  const candidate = String(supplied || '');
+  if (candidate.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ candidate.charCodeAt(i);
+  return diff === 0;
+}
+
+// Ejecutar manualmente una sola vez desde Apps Script.
+// Crea una clave aleatoria y la guarda en las Propiedades del proyecto.
+// La clave aparece en el registro solo en el momento de generarla.
+function generarClaveEditorialSegura() {
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty(EDITORIAL_KEY_PROPERTY_)) {
+    Logger.log('La propiedad %s ya está configurada. No se cambió ni se mostró la clave.', EDITORIAL_KEY_PROPERTY_);
+    return 'La clave editorial ya existe. No fue modificada. Para cambiarla, editá la propiedad del proyecto.';
+  }
+  const secret = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+  props.setProperty(EDITORIAL_KEY_PROPERTY_, secret);
+  Logger.log('CLAVE EDITORIAL NUEVA (copiala ahora y guardala en un lugar seguro): %s', secret);
+  return 'Clave editorial creada. Copiala desde el registro de ejecución y usala en la pantalla de acceso.';
+}
+
+function diagnosticoClaveEditorial() {
+  const configured = !!obtenerClaveEditorial_();
+  const result = {
+    configurada: configured,
+    propiedad: EDITORIAL_KEY_PROPERTY_,
+    mensaje: configured ? 'La clave editorial está configurada.' : 'Falta ejecutar generarClaveEditorialSegura().'
+  };
+  Logger.log(JSON.stringify(result));
+  return result;
+}
 
 const HEADERS = ['ID','Estado','Fecha','Categoria','Tag','Titulo','Resumen','Contenido','FotoPrincipal','Fotos','VideoURL','VideoDriveFileId','VideoDriveUrl','VideoDriveFolderId','FechaCreacion','FechaActualizacion','AudioURL','AudioDriveFileId','AudioDriveUrl'];
 
@@ -157,8 +197,7 @@ function editorBridgeAction_(p) {
   p=p||{};
   const action=String(p.action||'');
   const suppliedKey=String(p.key||'');
-  const acceptedKeys=Array.isArray(CONFIG.adminKeys)&&CONFIG.adminKeys.length?CONFIG.adminKeys:[CONFIG.adminKey];
-  if(!acceptedKeys.some(k=>String(k||'')===suppliedKey)) throw new Error('Clave editorial incorrecta.');
+  if(!validarClaveEditorial_(suppliedKey)) throw new Error('Clave editorial incorrecta.');
   switch(action) {
     case 'adminList':
       return {ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))};
@@ -441,10 +480,9 @@ function doPost(e){
     if(p.action==='agendaSave'){const r=saveAgenda_(p);return apiResponse_(p,{ok:true,...r});}
     if(p.action==='agendaUploadImage'){return apiResponse_(p,{ok:true,image:uploadAgendaImage_(p)});}
     if(p.action==='agendaDeleteOwn'){const u=validateFuncionario_(p),sh=getAgendaSheet_(),rows=sh.getDataRange().getValues();for(let i=1;i<rows.length;i++)if(String(rows[i][0])===String(p.id)&&String(rows[i][1])===u.id){sh.getRange(i+1,12).setValue('Inactiva');try{CacheService.getScriptCache().put('agenda_version',Utilities.getUuid(),21600);}catch(_){}return apiResponse_(p,{ok:true});}return apiResponse_(p,{ok:false,error:'Actividad no encontrada'});}
-    // Acceso editorial directo: aceptar cualquiera de las claves habilitadas.
+    // Todas las operaciones editoriales validan contra la propiedad privada del proyecto.
     const suppliedKey=String(p.key||'');
-    const acceptedKeys=CONFIG.adminKeys||[CONFIG.adminKey];
-    if(!acceptedKeys.includes(suppliedKey))return apiResponse_(p,{ok:false,error:'Clave editorial incorrecta'});
+    if(!validarClaveEditorial_(suppliedKey))return apiResponse_(p,{ok:false,error:'Clave editorial incorrecta'});
     if(p.action==='adminList'){return apiResponse_(p,{ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))});}
     if(p.action==='funcionariosList')return apiResponse_(p,{ok:true,items:listFuncionarios_().map(u=>({id:u.id,nombre:u.nombre,area:u.area,rol:u.rol,color:u.color,estado:u.estado,fechaCreacion:u.fechaCreacion,debeCambiarPassword:u.debeCambiarPassword,fechaCambioPassword:u.fechaCambioPassword,ultimoAcceso:u.ultimoAcceso}))});
     if(p.action==='funcionarioSave')return apiResponse_(p,{ok:true,item:saveFuncionario_(p)});
