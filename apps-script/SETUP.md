@@ -4,7 +4,7 @@
 
 - El código actual está configurado para la hoja de cálculo cuyo ID figura en CONFIG.spreadsheetId dentro de Code.gs. **No crear otra hoja ni cambiar ese ID sin migrar primero los datos**, porque la web seguiría leyendo la hoja anterior.
 - La carpeta de Google Drive también está configurada mediante CONFIG.driveRootFolderId.
-- La clave editorial actual del servidor es Ik3r2026, igual que la que utiliza el panel.
+- La clave editorial se administra mediante la propiedad privada `CENTRO_PRENSA_ADMIN_KEY`; no debe escribirse en el código ni en la documentación.
 - La inicialización es idempotente: crea las pestañas que falten y ajusta encabezados, pero no elimina pestañas ni borra filas existentes.
 
 ## Clave del Panel Editorial (privada)
