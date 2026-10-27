@@ -409,9 +409,23 @@ function parseAgendaDate_(s){
   if(isNaN(d.getTime()))throw new Error('Fecha u horario inválido.');
   return d;
 }
+function agendaDateValue_(value){
+  if(value===null||value===undefined||value==='')return '';
+  if(Object.prototype.toString.call(value)==='[object Date]'&&!isNaN(value.getTime())){
+    return Utilities.formatDate(value,Session.getScriptTimeZone(),"yyyy-MM-dd'T'HH:mm:ss");
+  }
+  const raw=String(value).trim();
+  if(!raw)return '';
+  const match=raw.match(/^(\\d{4}-\\d{2}-\\d{2})[ T](\\d{2}:\\d{2})(?::(\\d{2}))?/);
+  const hasZone=/([zZ]|[+-]\\d{2}:?\\d{2})$/.test(raw);
+  if(match&&!hasZone)return match[1]+'T'+match[2]+':'+(match[3]||'00');
+  const parsed=new Date(raw);
+  if(!isNaN(parsed.getTime()))return Utilities.formatDate(parsed,Session.getScriptTimeZone(),"yyyy-MM-dd'T'HH:mm:ss");
+  return raw;
+}
 function agendaRow_(r,colorMap){
   const area=String(r[3]||'');
-  return {id:String(r[0]),usuarioId:String(r[1]),nombreUsuario:String(r[2]||''),area,inicio:String(r[4]||''),fin:String(r[5]||''),actividad:String(r[6]||''),lugar:String(r[7]||''),descripcion:String(r[8]||''),imagenUrl:String(r[9]||''),fechaCreacion:String(r[10]||''),estado:String(r[11]||'Activa'),color:colorMap&&colorMap[normalizeText_(area)]||areaColor_(area)};
+  return {id:String(r[0]),usuarioId:String(r[1]),nombreUsuario:String(r[2]||''),area,inicio:agendaDateValue_(r[4]),fin:agendaDateValue_(r[5]),actividad:String(r[6]||''),lugar:String(r[7]||''),descripcion:String(r[8]||''),imagenUrl:String(r[9]||''),fechaCreacion:formatDateTime_(r[10])||String(r[10]||''),estado:String(r[11]||'Activa'),color:colorMap&&colorMap[normalizeText_(area)]||areaColor_(area)};
 }
 function listAgenda_(from,to){
   const cache=CacheService.getScriptCache(),version=cache.get('agenda_version')||'0';
