@@ -165,46 +165,11 @@ function postEditorIframe(action,extra,keyValue){
   try{form.submit()}catch(err){fail("No se pudo enviar el archivo a Apps Script: "+String(err&&err.message||err))}
  });
 }
-function postEditorJsonp(action,extra,keyValue){
- return new Promise((resolve,reject)=>{
-  const endpoint=window.PRENSA_CONFIG?.apiUrl;
-  if(!endpoint){reject(new Error("Falta configurar apiUrl en config.js"));return}
-  const callbackName="midesEditorJsonp_"+Date.now()+"_"+Math.floor(Math.random()*1000000000);
-  const payload={...extra,action,key:keyValue};
-  let script=null,timer=null,settled=false;
-  const cleanup=()=>{
-   if(settled)return;settled=true;
-   if(timer)clearTimeout(timer);
-   if(script)script.remove();
-   try{delete window[callbackName]}catch(_){window[callbackName]=undefined}
-  };
-  window[callbackName]=data=>{
-   cleanup();
-   if(!data||typeof data.ok!=="boolean"){reject(new Error("Apps Script devolvió una respuesta editorial no válida."));return}
-   if(!data.ok){reject(new Error(data.error||"Google Apps Script rechazó la operación."));return}
-   resolve(data);
-  };
-  try{
-   const url=new URL(endpoint);
-   const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-   url.searchParams.set("action","editorBridge");
-   url.searchParams.set("data64",encoded);
-   url.searchParams.set("callback",callbackName);
-   script=document.createElement("script");script.async=true;script.src=url.toString();
-   script.onerror=()=>{cleanup();reject(new Error("No se pudo conectar con el puente editorial JSONP. Verificá que la última versión de apps-script/Code.gs esté implementada en Apps Script."))};
-   timer=setTimeout(()=>{cleanup();reject(new Error("Apps Script no respondió al puente editorial JSONP dentro del plazo. Verificá que la última versión de apps-script/Code.gs esté implementada y que la URL de config.js sea la correcta."))},45000);
-   document.head.appendChild(script);
-  }catch(err){cleanup();reject(err)}
- });
-}
 async function post(action,extra={}){
  const k=key();if(!k)throw new Error("Ingresá la contraseña editorial para continuar.");
  if(!window.PRENSA_CONFIG?.apiUrl)throw new Error("Falta configurar apiUrl en config.js");
- const jsonpActions=["adminList","adminGet","save","savePublish","publish","unpublish","delete"];
- if(jsonpActions.includes(action)){
-  const encodedSize=JSON.stringify({...extra,action,key:k}).length;
-  if(encodedSize<4500)return await postEditorJsonp(action,extra,k);
- }
+ // Se conserva el transporte POST con iframe que utilizaba la versión estable del 24/10.
+ // Es necesario para textos largos, evita límites de URL y confirma el resultado por postMessage.
  return await postEditorIframe(action,extra,k);
 }
 function activateEditorialModule(id){
