@@ -9,7 +9,7 @@ const CONFIG = {
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-10-23-mapa5k-v4';
+const API_VERSION = '2026-10-26-centro-prensa-v1';
 
 const HEADERS = ['ID','Estado','Fecha','Categoria','Tag','Titulo','Resumen','Contenido','FotoPrincipal','Fotos','VideoURL','VideoDriveFileId','VideoDriveUrl','VideoDriveFolderId','FechaCreacion','FechaActualizacion','AudioURL','AudioDriveFileId','AudioDriveUrl'];
 
@@ -129,17 +129,6 @@ function doGet(e){
       const packed=String((e&&e.parameter&&e.parameter.data64)||'');
       const decoded=Utilities.newBlob(Utilities.base64Decode(packed)).getDataAsString('UTF-8');
       result=editorBridgeAction_(JSON.parse(decoded));
-    }
-    else if(a==='mapa5kList') result={ok:true,items:mapa5kList_()};
-    else if(a==='mapa5kDiagnostico') {
-      const sh=mapa5kSheet_();
-      result={ok:true,spreadsheetId:MAPA5K_SPREADSHEET_ID_,sheetName:sh.getName(),headers:sh.getRange(1,1,1,MAPA5K_HEADERS_.length).getDisplayValues()[0],elements:Math.max(0,sh.getLastRow()-1),lastRow:sh.getLastRow()};
-    }
-    else if(a==='mapa5kSave') {
-      const payload=JSON.parse(String(e.parameter.data||'{}'));
-      const acceptedKeys = Array.isArray(CONFIG.adminKeys) && CONFIG.adminKeys.length ? CONFIG.adminKeys : [CONFIG.adminKey];
-      if(!acceptedKeys.some(k=>String(k||'')===String(payload.key||''))) throw new Error('Clave de edición del mapa incorrecta.');
-      result={ok:true,items:mapa5kSave_(payload.items||[])};
     }
     else result={ok:false,error:'Acción GET no válida'};
   }catch(err){result={ok:false,error:String(err)};}
@@ -499,97 +488,6 @@ function doPost(e){
   }
 }
 
-/*
- * Módulo independiente del mapa 5K INJU–MIDES Florida.
- * Usa exclusivamente la pestaña Mapa5K y helpers con prefijo mapa5k_.
- * No modifica las hojas ni las funciones editoriales del Centro de Prensa.
- */
-const MAPA5K_SPREADSHEET_ID_ = '1OuIrwtwKQ1mDDTCq-QLuyH-q82Pla2HcKiXqOerDwn4';
-const MAPA5K_HEADERS_ = ['ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles','Color','Visible','PuntosJSON','FechaActualizacion'];
-
-// Ejecutar manualmente una vez desde Apps Script para crear/verificar la pestaña dedicada.
-// No borra elementos existentes ni toca las hojas del Centro de Prensa.
-function mapa5kSheet_() {
-  const ss = SpreadsheetApp.openById(MAPA5K_SPREADSHEET_ID_);
-  let sh = ss.getSheetByName('Mapa5K');
-  if (!sh) {
-    sh = ss.insertSheet('Mapa5K');
-    sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setValues([MAPA5K_HEADERS_]);
-    sh.setFrozenRows(1);
-  } else if (sh.getLastRow() === 0) {
-    sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setValues([MAPA5K_HEADERS_]);
-    sh.setFrozenRows(1);
-  } else {
-    const existing = sh.getRange(1,1,1,Math.max(sh.getLastColumn(),MAPA5K_HEADERS_.length)).getValues()[0];
-    const matches = MAPA5K_HEADERS_.every((h,i)=>existing[i]===h);
-    if (!matches) {
-      // Es seguro corregir encabezados si la hoja no contiene registros; nunca se pisan datos.
-      if (sh.getLastRow() <= 1) {
-        sh.getRange(1,1,1,MAPA5K_HEADERS_.length).setValues([MAPA5K_HEADERS_]);
-        if (sh.getLastColumn() > MAPA5K_HEADERS_.length) {
-          sh.getRange(1,MAPA5K_HEADERS_.length+1,1,sh.getLastColumn()-MAPA5K_HEADERS_.length).clearContent();
-        }
-        sh.setFrozenRows(1);
-      } else {
-        throw new Error('La pestaña Mapa5K tiene datos pero sus encabezados no coinciden. Para protegerlos, no se modificó automáticamente. Revisá la fila 1.');
-      }
-    }
-  }
-  return sh;
-}
-
-function mapa5kList_() {
-  const sh = mapa5kSheet_();
-  if (sh.getLastRow() < 2) return [];
-  return sh.getRange(2,1,sh.getLastRow()-1,MAPA5K_HEADERS_.length).getValues()
-    .filter(r=>r[0])
-    .map(r=>({
-      id:String(r[0]), nombre:String(r[1]||''), tipo:String(r[2]||'otros'),
-      geometria:String(r[3]||'punto'), descripcion:String(r[4]||''),
-      horario:String(r[5]||''), detalles:String(r[6]||''), color:String(r[7]||'#0756a4'),
-      visible:String(r[8]).toLowerCase()!=='false', puntos:mapa5kParsePoints_(r[9])
-    }));
-}
-
-function mapa5kParsePoints_(value) {
-  if (Array.isArray(value)) return value;
-  try { const parsed=JSON.parse(String(value||'[]')); return Array.isArray(parsed)?parsed:[]; }
-  catch (_) { return []; }
-}
-
-function mapa5kSave_(items) {
-  if (!Array.isArray(items)) throw new Error('Los elementos del mapa no tienen un formato válido.');
-  if (items.length > 300) throw new Error('El mapa supera el máximo de 300 elementos por guardado.');
-  const sh=mapa5kSheet_();
-  const existing=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,MAPA5K_HEADERS_.length).getValues():[];
-  const rowById={};
-  existing.forEach((r,i)=>{if(r[0])rowById[String(r[0])]=i+2;});
-  const incoming={};
-  items.forEach(o=>{
-    if(!o||!o.id) throw new Error('Hay un elemento del mapa sin identificador.');
-    const id=String(o.id);
-    if(incoming[id]) throw new Error('Hay identificadores duplicados en el mapa.');
-    incoming[id]=true;
-    const row=[id,String(o.nombre||''),String(o.tipo||'otros'),String(o.geometria||'punto'),
-      String(o.descripcion||''),String(o.horario||''),String(o.detalles||''),String(o.color||'#0756a4'),
-      o.visible===false?'false':'true',JSON.stringify(mapa5kParsePoints_(o.puntos)),new Date()];
-    const oldRow=rowById[id];
-    if(oldRow) sh.getRange(oldRow,1,1,MAPA5K_HEADERS_.length).setValues([row]);
-    else { sh.appendRow(row); rowById[id]=sh.getLastRow(); }
-  });
-  // Guardado acumulativo: un guardado o una lista incompleta nunca borra otros elementos.
-  // Para retirar algo del mapa, marcarlo como "Oculto" desde el editor.
-  SpreadsheetApp.flush();
-  const saved=mapa5kList_();
-  const savedById={};saved.forEach(o=>savedById[String(o.id)]=o);
-  items.forEach(o=>{
-    const check=savedById[String(o.id)];
-    if(!check)throw new Error('Google Sheets no confirmó el registro del elemento: '+String(o.nombre||o.id));
-    if(JSON.stringify(mapa5kParsePoints_(check.puntos))!==JSON.stringify(mapa5kParsePoints_(o.puntos)))
-      throw new Error('Google Sheets no confirmó la geometría del elemento: '+String(o.nombre||o.id));
-  });
-  return saved;
-}
 function normalizeStatus_(value){return String(value==null?'':value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();}
 function listPublished_(){return readAll_().filter(x=>normalizeStatus_(x.estado)==='publicado').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));}
 // La sala pública lee directamente la hoja para evitar una caché editorial antigua.
