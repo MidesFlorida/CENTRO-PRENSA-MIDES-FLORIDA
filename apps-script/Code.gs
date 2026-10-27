@@ -416,8 +416,8 @@ function agendaDateValue_(value){
   }
   const raw=String(value).trim();
   if(!raw)return '';
-  const match=raw.match(/^(\\d{4}-\\d{2}-\\d{2})[ T](\\d{2}:\\d{2})(?::(\\d{2}))?/);
-  const hasZone=/([zZ]|[+-]\\d{2}:?\\d{2})$/.test(raw);
+  const match=raw.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::(\d{2}))?/);
+  const hasZone=/([zZ]|[+-]\d{2}:?\d{2})$/.test(raw);
   if(match&&!hasZone)return match[1]+'T'+match[2]+':'+(match[3]||'00');
   const parsed=new Date(raw);
   if(!isNaN(parsed.getTime()))return Utilities.formatDate(parsed,Session.getScriptTimeZone(),"yyyy-MM-dd'T'HH:mm:ss");
