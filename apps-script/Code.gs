@@ -6,38 +6,24 @@ const CONFIG = {
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-10-26-centro-prensa-v2-keyprops';
+const API_VERSION = '2026-10-26-centro-prensa-v3-script-properties';
 const EDITORIAL_KEY_PROPERTY_ = 'CENTRO_PRENSA_ADMIN_KEY';
 
-// La clave vive en Propiedades del proyecto de Apps Script, no en el código ni en GitHub.
+// La clave se define manualmente en Configuración del proyecto → Propiedades de secuencia de comandos.
+// El código solo lee la propiedad; nunca genera, muestra ni almacena la clave dentro del archivo.
 function obtenerClaveEditorial_() {
   return String(PropertiesService.getScriptProperties().getProperty(EDITORIAL_KEY_PROPERTY_) || '').trim();
 }
 function validarClaveEditorial_(supplied) {
   const expected = obtenerClaveEditorial_();
   if (!expected) {
-    throw new Error('La clave editorial no está configurada en Apps Script. Ejecutá generarClaveEditorialSegura() desde el editor y copiá la clave del registro de ejecución.');
+    throw new Error('Falta configurar la propiedad CENTRO_PRENSA_ADMIN_KEY en Configuración del proyecto → Propiedades de secuencia de comandos de Apps Script.');
   }
-  const candidate = String(supplied || '');
+  const candidate = String(supplied || '').trim();
   if (candidate.length !== expected.length) return false;
   let diff = 0;
   for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ candidate.charCodeAt(i);
   return diff === 0;
-}
-
-// Ejecutar manualmente una sola vez desde Apps Script.
-// Crea una clave aleatoria y la guarda en las Propiedades del proyecto.
-// La clave aparece en el registro solo en el momento de generarla.
-function generarClaveEditorialSegura() {
-  const props = PropertiesService.getScriptProperties();
-  if (props.getProperty(EDITORIAL_KEY_PROPERTY_)) {
-    Logger.log('La propiedad %s ya está configurada. No se cambió ni se mostró la clave.', EDITORIAL_KEY_PROPERTY_);
-    return 'La clave editorial ya existe. No fue modificada. Para cambiarla, editá la propiedad del proyecto.';
-  }
-  const secret = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
-  props.setProperty(EDITORIAL_KEY_PROPERTY_, secret);
-  Logger.log('CLAVE EDITORIAL NUEVA (copiala ahora y guardala en un lugar seguro): ' + secret);
-  return 'Clave editorial creada. Copiala desde el registro de ejecución y usala en la pantalla de acceso.';
 }
 
 function diagnosticoClaveEditorial() {
@@ -45,7 +31,9 @@ function diagnosticoClaveEditorial() {
   const result = {
     configurada: configured,
     propiedad: EDITORIAL_KEY_PROPERTY_,
-    mensaje: configured ? 'La clave editorial está configurada.' : 'Falta ejecutar generarClaveEditorialSegura().'
+    mensaje: configured
+      ? 'La propiedad de clave editorial está configurada.'
+      : 'Falta crear CENTRO_PRENSA_ADMIN_KEY en Propiedades de secuencia de comandos.'
   };
   Logger.log(JSON.stringify(result));
   return result;
