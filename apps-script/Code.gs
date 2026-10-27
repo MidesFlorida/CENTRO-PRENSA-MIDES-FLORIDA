@@ -6,7 +6,7 @@ const CONFIG = {
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-10-26-centro-prensa-v3-script-properties';
+const API_VERSION = '2026-10-26-centro-prensa-v4-auth-separated';
 const EDITORIAL_KEY_PROPERTY_ = 'CENTRO_PRENSA_ADMIN_KEY';
 
 // La clave se define manualmente en Configuración del proyecto → Propiedades de secuencia de comandos.
@@ -187,6 +187,9 @@ function editorBridgeAction_(p) {
   const suppliedKey=String(p.key||'');
   if(!validarClaveEditorial_(suppliedKey)) throw new Error('Clave editorial incorrecta.');
   switch(action) {
+    case 'auth':
+      // Valida únicamente la propiedad privada. No depende de Google Sheets para habilitar el panel.
+      return {ok:true,authenticated:true,apiVersion:API_VERSION};
     case 'adminList':
       return {ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))};
     case 'adminGet':
@@ -471,6 +474,8 @@ function doPost(e){
     // Todas las operaciones editoriales validan contra la propiedad privada del proyecto.
     const suppliedKey=String(p.key||'');
     if(!validarClaveEditorial_(suppliedKey))return apiResponse_(p,{ok:false,error:'Clave editorial incorrecta'});
+    // Autenticación rápida: no consulta Sheets ni carga todos los comunicados.
+    if(p.action==='auth')return apiResponse_(p,{ok:true,authenticated:true,apiVersion:API_VERSION});
     if(p.action==='adminList'){return apiResponse_(p,{ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))});}
     if(p.action==='funcionariosList')return apiResponse_(p,{ok:true,items:listFuncionarios_().map(u=>({id:u.id,nombre:u.nombre,area:u.area,rol:u.rol,color:u.color,estado:u.estado,fechaCreacion:u.fechaCreacion,debeCambiarPassword:u.debeCambiarPassword,fechaCambioPassword:u.fechaCambioPassword,ultimoAcceso:u.ultimoAcceso}))});
     if(p.action==='funcionarioSave')return apiResponse_(p,{ok:true,item:saveFuncionario_(p)});
