@@ -22,6 +22,10 @@ La clave no se escribe en `Code.gs`, en `config.js` ni en GitHub. La define el a
 
 El código solo lee esa propiedad y no la genera, muestra ni guarda dentro del archivo. Si el acceso falla, ejecutar `diagnosticoClaveEditorial`: informa solamente si la propiedad existe, sin revelar su valor. Asegurate de crear la propiedad en el mismo proyecto de Apps Script que se implementa como aplicación web.
 
+## Autenticación del panel editorial
+
+El ingreso y la carga de comunicados son operaciones separadas. El panel primero consulta `?action=ping` para confirmar la versión del despliegue; luego envía `action=auth`, que valida `CENTRO_PRENSA_ADMIN_KEY` sin leer Google Sheets. Tras aceptar la clave, el panel carga los comunicados. Si se informa una versión diferente a `2026-10-26-centro-prensa-v4-auth-separated`, hay que copiar el `Code.gs` vigente y publicar una Nueva versión en la implementación asociada a la URL de `config.js`.
+
 ## Inicialización y verificación
 
 1. Abrir la hoja de cálculo configurada en CONFIG.spreadsheetId.
@@ -33,7 +37,7 @@ El código solo lee esa propiedad y no la genera, muestra ni guarda dentro del a
 7. Ejecutar autorizarCentroPrensa una vez y aceptar los permisos de Google Sheets, Drive y servicios asociados.
 8. Ir a **Implementar → Gestionar implementaciones**, abrir la implementación web existente y pulsar **Editar**. Elegir **Nueva versión** y desplegar. Mantener la ejecución como el propietario y el acceso que ya usa la plataforma.
 9. Confirmar que la URL /exec de esa implementación coincide con apiUrl en config.js. Si se creó una implementación distinta, actualizar config.js con su URL.
-10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-10-26-centro-prensa-v3-script-properties"`. La sala pública admite temporalmente esas versiones anteriores.
+10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-10-26-centro-prensa-v4-auth-separated"`. La sala pública admite temporalmente esas versiones anteriores.
 11. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
 12. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Luego, desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
 
