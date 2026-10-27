@@ -728,7 +728,7 @@ function apiResponse_(p,obj){
   if(p&&p.transport==='iframe'&&/^[A-Za-z0-9_-]{16,100}$/.test(token)){
     const message={channel:'mides-prensa-api',token:token,response:obj};
     const safe=JSON.stringify(message).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
-    return HtmlService.createHtmlOutput('<!doctype html><html><head><meta charset="utf-8"></head><body><script>parent.postMessage('+safe+',"*");</script></body></html>')
+    return HtmlService.createHtmlOutput('<!doctype html><html><head><meta charset="utf-8"></head><body><script>(function(){var m='+safe+';try{parent.postMessage(m,"*")}catch(e){}try{if(top!==parent)top.postMessage(m,"*")}catch(e){}})();</script></body></html>')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
   return json_(obj);
