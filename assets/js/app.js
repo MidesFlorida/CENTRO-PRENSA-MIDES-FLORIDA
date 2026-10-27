@@ -102,8 +102,11 @@ function requestJsonp(url,action="list"){
  });
 }
 function verifyApiVersion(data){
- if(!data||data.apiVersion!==REQUIRED_API_VERSION||data.jsonpSupported!==true){
-  throw new Error("La implementación de Apps Script está desactualizada. Publicá una nueva versión desde Implementar → Gestionar implementaciones → Editar → Nueva versión. Versión requerida: "+REQUIRED_API_VERSION+".");
+ // Acepta la versión estable que estaba desplegada antes de los cambios del 26/10
+ // y la versión limpia nueva. Así el sitio no se cae durante el retorno al endpoint anterior.
+ const supportedVersions=[REQUIRED_API_VERSION,"2026-10-23-mapa5k-v4"];
+ if(!data||!supportedVersions.includes(data.apiVersion)||data.jsonpSupported!==true){
+  throw new Error("La implementación de Apps Script no tiene una versión compatible. Publicá una Nueva versión desde Implementar → Gestionar implementaciones. Versión actual esperada: "+REQUIRED_API_VERSION+".");
  }
 }
 async function load(){
