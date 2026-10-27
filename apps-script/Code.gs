@@ -36,7 +36,7 @@ function generarClaveEditorialSegura() {
   }
   const secret = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
   props.setProperty(EDITORIAL_KEY_PROPERTY_, secret);
-  Logger.log('CLAVE EDITORIAL NUEVA (copiala ahora y guardala en un lugar seguro): %s', secret);
+  Logger.log('CLAVE EDITORIAL NUEVA (copiala ahora y guardala en un lugar seguro): ' + secret);
   return 'Clave editorial creada. Copiala desde el registro de ejecución y usala en la pantalla de acceso.';
 }
 
