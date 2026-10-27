@@ -95,32 +95,91 @@ $("date").value=today;
 function showNotice(t,type="success"){const n=$("notice");if(n){n.textContent=t;n.className="toast "+type;n.hidden=false;clearTimeout(window.noticeTimer);window.noticeTimer=setTimeout(()=>n.hidden=true,6500)}const s=$("action-status");if(s){s.textContent=t;s.className="action-status "+type}}
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
 function key(){return editorKey||""}
+function checkEditorialApiVersion(){
+ return new Promise((resolve,reject)=>{
+  const endpoint=window.PRENSA_CONFIG?.apiUrl;
+  if(!endpoint){reject(new Error("Falta configurar apiUrl en config.js."));return}
+  const callbackName="midesApiCheck_"+Date.now()+"_"+Math.floor(Math.random()*1000000000);
+  const script=document.createElement("script");
+  let timer=null,loadTimer=null,settled=false;
+  const cleanup=()=>{
+   if(settled)return;settled=true;
+   if(timer)clearTimeout(timer);
+   if(loadTimer)clearTimeout(loadTimer);
+   script.remove();
+   try{delete window[callbackName]}catch(_){window[callbackName]=undefined}
+  };
+  window[callbackName]=data=>{cleanup();resolve(data||null)};
+  script.onerror=()=>{cleanup();reject(new Error("No se pudo consultar la API de Apps Script. Verificá que config.js apunte a una URL /exec válida y que el Web App esté implementado con acceso para quienes lo usan."))};
+  script.onload=()=>{
+   if(settled)return;
+   loadTimer=setTimeout(()=>{
+    cleanup();
+    reject(new Error("La API cargó, pero no respondió como JSONP. La implementación activa puede ser antigua o no ser la del Centro de Prensa."));
+   },500);
+  };
+  timer=setTimeout(()=>{
+   cleanup();
+   reject(new Error("La API no respondió a la comprobación inicial dentro de 15 segundos. Revisá la URL /exec y la implementación de Apps Script."));
+  },15000);
+  try{
+   const url=new URL(endpoint);
+   url.searchParams.set("action","ping");
+   url.searchParams.set("callback",callbackName);
+   url.searchParams.set("_",String(Date.now()));
+   script.async=true;script.src=url.toString();
+   document.head.appendChild(script);
+  }catch(err){cleanup();reject(err)}
+ });
+}
+const REQUIRED_EDITOR_API_VERSION="2026-10-26-centro-prensa-v4-auth-separated";
 async function authorizeEditorial(){
   if(editorialAuthorized)return true;
+  if(editorialAuthPromise)return editorialAuthPromise;
   const input=$("editor-auth-password"),screen=$("editor-auth-screen"),error=$("editor-auth-error");
   const k=String(input?.value||"").trim();
+  const button=$("editor-auth-form")?.querySelector('button[type="submit"]');
   if(!k){
-    if(error){error.textContent="Ingresá la contraseña editorial.";error.style.display="block"}
+    if(error){error.textContent="Ingresá la clave guardada en CENTRO_PRENSA_ADMIN_KEY.";error.style.display="block"}
     input?.focus();return false;
   }
+  if(button){button.disabled=true;button.textContent="Verificando acceso…"}
   editorKey=k;
-  try{
-    const data=await post("adminList");
-    items=data.items||[];
-    editorialAuthorized=true;
-    try{sessionStorage.setItem("mides_editorial_session","authorized")}catch(_){}
-    if(screen)screen.classList.add("ok");
-    if(error)error.style.display="none";
-    $("api-status").textContent="Conectado";
-    render();
-    showNotice("✓ Acceso editorial y conexión con Google Sheets confirmados.","success");
-    return true;
-  }catch(err){
-    editorKey="";
-    editorialAuthorized=false;
-    if(error){error.textContent="No se pudo validar el acceso: "+String(err.message||err);error.style.display="block"}
-    input?.focus();return false;
-  }
+  editorialAuthPromise=(async()=>{
+    try{
+      // Detecta una implementación antigua antes de probar la clave.
+      const ping=await checkEditorialApiVersion();
+      if(!ping||!ping.apiVersion)throw new Error("La API no informó su versión. Revisá la implementación de Apps Script.");
+      if(ping.apiVersion!==REQUIRED_EDITOR_API_VERSION){
+        throw new Error("La API activa informa la versión "+ping.apiVersion+", pero el panel necesita "+REQUIRED_EDITOR_API_VERSION+". Copiá el Code.gs actualizado al proyecto que corresponde a esta URL y publicá una Nueva versión en la misma implementación.");
+      }
+      // La autenticación verifica solo la clave privada; no falla por una consulta lenta de Sheets.
+      const data=await post("auth");
+      if(!data.authenticated||data.apiVersion!==REQUIRED_EDITOR_API_VERSION){
+        throw new Error("Apps Script no confirmó la autenticación con la versión requerida. Verificá que Code.gs esté guardado y publicado como Nueva versión.");
+      }
+      editorialAuthorized=true;
+      try{sessionStorage.setItem("mides_editorial_session","authorized")}catch(_){}
+      if(screen)screen.classList.add("ok");
+      if(error)error.style.display="none";
+      if(input)input.value="";
+      $("api-status").textContent="Acceso validado; cargando contenidos…";
+      showNotice("✓ Clave validada. Cargando comunicados desde Google Sheets…","success");
+      // La carga del contenido queda separada: si Sheets tiene un problema, el panel no vuelve a bloquear el ingreso.
+      await load();
+      return true;
+    }catch(err){
+      editorKey="";
+      editorialAuthorized=false;
+      if(error){error.textContent="No se pudo ingresar: "+String(err.message||err);error.style.display="block"}
+      input?.focus();
+      return false;
+    }finally{
+      editorialAuthPromise=null;
+      if(button){button.disabled=false;button.textContent="Ingresar"}
+    }
+  })();
+  return await editorialAuthPromise;
 }
 $("editor-auth-form").addEventListener("submit",async e=>{e.preventDefault();await authorizeEditorial();});
 document.querySelectorAll(".content-filter").forEach(btn=>btn.addEventListener("click",()=>{currentContentFilter=btn.dataset.filter;document.querySelectorAll(".content-filter").forEach(b=>b.classList.toggle("active",b===btn));render();}));
