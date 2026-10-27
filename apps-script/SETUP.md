@@ -12,7 +12,7 @@
 La clave ya no se guarda en `Code.gs` ni en GitHub. Se almacena como propiedad privada del proyecto de Apps Script:
 
 - Nombre de propiedad: `CENTRO_PRENSA_ADMIN_KEY`.
-- Para crearla sin escribir una clave en el código, primero guardá este `Code.gs), seleccioná la función `generarClaveEditorialSegura` en el editor de Apps Script y pulsá **Ejecutar**.
+- Para crearla sin escribir una clave en el código, primero guardá este `Code.gs`, seleccioná la función `generarClaveEditorialSegura` en el editor de Apps Script y pulsá **Ejecutar**.
 - En el registro de ejecución, copiá el valor que aparece después de `CLAVE EDITORIAL NUEVA` y guardalo en un lugar seguro. Esa clave es la que se ingresa en la pantalla de acceso del panel.
 - La función solo genera una clave si la propiedad todavía no existe; si ya existe, no la reemplaza ni la revela. Para cambiarla, editá o eliminá `CENTRO_PRENSA_ADMIN_KEY` en **Configuración del proyecto → Propiedades de secuencia de comandos** y generá una nueva.
 - No publiques ni compartas el registro de ejecución ni la clave. Las claves anteriores escritas en el código dejan de ser válidas tras desplegar esta versión.
