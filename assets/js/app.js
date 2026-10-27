@@ -1,6 +1,6 @@
 const grid=document.getElementById("newsGrid"),search=document.getElementById("search"),category=document.getElementById("category"),count=document.getElementById("resultCount");
 let items=[];
-const REQUIRED_API_VERSION="2026-10-23-mapa5k-v4";
+const REQUIRED_API_VERSION="2026-10-26-centro-prensa-v1";
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
 function driveFileId(value){
  const raw=String(value||"").trim();if(!raw)return "";
