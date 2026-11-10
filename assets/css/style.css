@@ -118,3 +118,10 @@
 .social-feed-note{margin:0;padding:11px 15px;border-top:1px solid var(--line);font-size:11px;line-height:1.45;color:var(--muted);background:#fff}
 @media(max-width:850px){.social-feed-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.social-feed-heading{padding:13px}.instagram-profile-embed{padding:5px;max-height:620px}.facebook-preview{min-height:260px;padding:28px 18px}}
+
+/* Publicaciones Facebook insertadas */
+.facebook-posts-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;background:#f7f9fb;align-items:start}
+.facebook-post-embed{min-width:0;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:7px}
+.facebook-post-embed iframe{display:block;width:100%;max-width:100%;min-height:420px}
+.facebook-profile-fallback{display:block;width:max-content;max-width:calc(100% - 24px);margin:14px auto;text-align:center}
+@media(max-width:560px){.facebook-posts-preview{grid-template-columns:1fr}.facebook-post-embed iframe{height:540px}}
