@@ -79,3 +79,19 @@
 .upcoming-content p{font-size:14px;line-height:1.6;color:var(--muted);margin:12px 0 0;white-space:pre-line}
 .upcoming-image-link{display:inline-block;margin-top:12px;color:var(--mides-blue);font-weight:800;font-size:12px;text-decoration:none}
 @media(max-width:560px){.upcoming-card{grid-template-columns:76px 1fr;gap:14px;padding:14px}.upcoming-date{min-height:90px}.upcoming-date strong{font-size:29px}.upcoming-content h3{font-size:17px}.public-calendar-link{white-space:normal;text-align:right;max-width:130px}}
+
+/* Accesos oficiales a redes sociales */
+.social-section{margin:0 -24px;padding:48px max(24px,calc((100% - 1132px)/2));background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center}
+.social-copy h2{font-size:clamp(25px,3vw,34px);color:var(--mides-dark);max-width:520px}
+.social-copy>p:last-child{color:var(--muted);line-height:1.6;max-width:520px;margin:12px 0 0}
+.social-links{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.social-link{display:flex;align-items:center;gap:12px;min-width:0;padding:17px 14px;border:1px solid var(--line);border-radius:9px;text-decoration:none;background:#fff;transition:transform .18s,box-shadow .18s}
+.social-link:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.social-symbol{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:#eaf3fa;color:var(--mides-blue);font-size:25px;font-weight:800}
+.instagram-link .social-symbol{background:#f7edf5;color:#a13c82}
+.social-link strong,.social-link small{display:block}
+.social-link strong{font-size:14px;color:var(--mides-dark)}
+.social-link small{font-size:11px;color:var(--muted);margin-top:4px}
+.social-arrow{margin-left:auto;color:var(--mides-blue);font-size:18px}
+@media(max-width:850px){.social-section{grid-template-columns:1fr;gap:20px}}
+@media(max-width:560px){.social-section{margin:0 -14px;padding:38px 14px}.social-links{grid-template-columns:1fr}.social-link{padding:14px}}
