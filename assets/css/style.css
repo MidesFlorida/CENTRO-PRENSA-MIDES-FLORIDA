@@ -95,3 +95,26 @@
 .social-arrow{margin-left:auto;color:var(--mides-blue);font-size:18px}
 @media(max-width:850px){.social-section{grid-template-columns:1fr;gap:20px}}
 @media(max-width:560px){.social-section{margin:0 -14px;padding:38px 14px}.social-links{grid-template-columns:1fr}.social-link{padding:14px}}
+
+
+/* Vistas previas oficiales de redes sociales */
+.social-feed-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:start}
+.social-feed-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 3px 14px rgba(23,50,77,.06)}
+.social-feed-heading{display:flex;align-items:center;gap:11px;padding:15px 17px;border-bottom:1px solid var(--line)}
+.social-feed-heading>div{min-width:0;flex:1}
+.social-feed-heading strong,.social-feed-heading small{display:block}
+.social-feed-heading strong{font-size:14px;color:var(--mides-dark)}
+.social-feed-heading small{font-size:11px;color:var(--muted);margin-top:4px}
+.social-feed-heading>a{font-size:12px;font-weight:800;color:var(--mides-blue);text-decoration:none;white-space:nowrap}
+.instagram-symbol{background:#f7edf5;color:#a13c82}
+.facebook-symbol{background:#eaf3fa;color:#0866ff}
+.instagram-profile-embed{min-height:260px;max-height:680px;overflow:auto;padding:12px;background:#fafbfd}
+.instagram-profile-embed .instagram-media{margin:0 auto!important}
+.facebook-preview{min-height:300px;padding:35px 25px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(145deg,#f4f8fc,#fff)}
+.facebook-preview-mark{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:#0866ff;color:white;font-size:36px;font-weight:800;margin-bottom:16px}
+.facebook-preview>strong{font-size:19px;line-height:1.3;color:var(--mides-dark);max-width:330px}
+.facebook-preview>p{font-size:13px;line-height:1.55;color:var(--muted);max-width:340px}
+.facebook-preview-button{display:inline-block;margin-top:9px;padding:12px 16px;border-radius:6px;background:#0866ff;color:white;text-decoration:none;font-size:12px;font-weight:800}
+.social-feed-note{margin:0;padding:11px 15px;border-top:1px solid var(--line);font-size:11px;line-height:1.45;color:var(--muted);background:#fff}
+@media(max-width:850px){.social-feed-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.social-feed-heading{padding:13px}.instagram-profile-embed{padding:5px;max-height:620px}.facebook-preview{min-height:260px;padding:28px 18px}}
