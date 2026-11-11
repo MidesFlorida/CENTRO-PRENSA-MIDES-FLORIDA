@@ -1,5 +1,7 @@
 const grid=document.getElementById("newsGrid"),search=document.getElementById("search"),category=document.getElementById("category"),count=document.getElementById("resultCount");
 let items=[];
+const moreButton=document.getElementById("newsMoreButton");
+let showAllNews=false;
 const REQUIRED_API_VERSION="2026-10-26-centro-prensa-v4-auth-separated";
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
 function driveFileId(value){
@@ -42,11 +44,17 @@ function render(){
   const published=String(x.estado||"").trim().toLowerCase()==="publicado";
   const matchesQuery=!q||[x.titulo,x.resumen,x.contenido,x.categoria,x.tag,x.fecha].join(" ").toLowerCase().includes(q);
   return published&&matchesQuery&&(!c||String(x.categoria||"").toLowerCase()===c.toLowerCase());
- });
+ }).sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||"")));
+ const visibleData=showAllNews?data:data.slice(0,5);
+ if(moreButton){
+  moreButton.hidden=data.length<=5;
+  moreButton.textContent=showAllNews?"Ver menos comunicados":"Ver más comunicados";
+  moreButton.setAttribute("aria-expanded",showAllNews?"true":"false");
+ }
  count.textContent=data.length+" "+(data.length===1?"comunicado publicado":"comunicados publicados");
  grid.classList.remove("draft-list","public-press-list");
  grid.classList.add("news-grid","public-vertical-grid");
- grid.innerHTML=data.map(x=>{
+ grid.innerHTML=visibleData.map(x=>{
   const photo=featuredPhoto(x);
   const photoMarkup=photo
    ? '<div class="public-card-image"><img src="'+esc(publicImageUrl(photo))+'" data-original="'+esc(photo)+'" alt="'+esc(x.titulo||"Foto destacada del comunicado")+'" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="cardImageError(this)"></div>'
@@ -171,4 +179,7 @@ async function loadUpcoming(){
  }
 }
 
-search.addEventListener("input",render);category.addEventListener("change",render);load();loadUpcoming();
+search.addEventListener("input",()=>{showAllNews=false;render();});
+category.addEventListener("change",()=>{showAllNews=false;render();});
+if(moreButton)moreButton.addEventListener("click",()=>{showAllNews=!showAllNews;render();});
+load();loadUpcoming();
