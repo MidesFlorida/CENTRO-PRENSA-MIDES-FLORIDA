@@ -125,3 +125,40 @@
 .facebook-post-embed iframe{display:block;width:100%;max-width:100%;min-height:420px}
 .facebook-profile-fallback{display:block;width:max-content;max-width:calc(100% - 24px);margin:14px auto;text-align:center}
 @media(max-width:560px){.facebook-posts-preview{grid-template-columns:1fr}.facebook-post-embed iframe{height:540px}}
+
+
+/* Portada editorial: comunicados recientes y redes sociales en columnas */
+.press-home-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(290px,.85fr);gap:26px;align-items:start}
+.press-main-column{min-width:0}
+.press-main-column .public-vertical-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.press-main-column .public-vertical-grid .public-card-image{height:175px;flex-basis:175px}
+.press-main-column .public-vertical-grid .public-vertical-body{padding:16px}
+.press-main-column .public-vertical-grid .public-vertical-body h3{font-size:17px}
+.news-more-wrap{display:flex;justify-content:center;margin:22px 0 0}
+.news-more-button{border:0;border-radius:6px;background:var(--mides-blue);color:#fff;padding:13px 24px;font-size:13px;font-weight:800;cursor:pointer}
+.news-more-button:hover{filter:brightness(.92)}
+.news-more-button[hidden]{display:none}
+.social-sidebar{min-width:0;display:grid;gap:16px}
+.social-sidebar .social-copy{padding:0 4px 4px}
+.social-sidebar .social-copy h2{font-size:23px;line-height:1.2}
+.social-sidebar .social-copy>p:last-child{font-size:13px;line-height:1.5}
+.social-sidebar .social-feed-grid{grid-template-columns:1fr;gap:15px}
+.social-sidebar .social-feed-card{border-radius:8px}
+.social-sidebar .social-feed-heading{padding:12px}
+.social-sidebar .instagram-profile-embed{min-height:190px;max-height:350px;padding:7px}
+.social-sidebar .facebook-posts-preview{grid-template-columns:1fr;padding:8px}
+.social-sidebar .facebook-post-embed iframe{height:360px;min-height:360px}
+.social-sidebar .social-feed-note{font-size:10px;padding:9px 11px}
+@media(max-width:900px){
+ .press-home-layout{grid-template-columns:minmax(0,1fr) minmax(260px,.8fr);gap:16px}
+ .press-main-column .public-vertical-grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+ .press-home-layout{grid-template-columns:1fr}
+ .press-main-column .public-vertical-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .social-sidebar{margin-top:18px}
+}
+@media(max-width:560px){
+ .press-main-column .public-vertical-grid{grid-template-columns:1fr}
+ .social-sidebar .facebook-post-embed iframe{height:420px;min-height:420px}
+}
