@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Centro de Prensa de MIDES Florida">
 <title>Centro de Prensa | MIDES Florida</title>
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=20261111-home-layout">
 <link rel="icon" type="image/png" href="https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png">
 </head>
 <body>
@@ -64,15 +64,12 @@
         <option value="">Todas las categorías</option><option>Actividad</option><option>Programa</option><option>Comunicado</option><option>Institucional</option><option>Convocatoria</option>
       </select>
     </div>
-    <section id="newsGrid" class="news-grid" aria-live="polite"></section>
-  </section>
-
-  <section id="acceso-funcionarios" class="resources funcionarios-access">
-    <div><p class="eyebrow blue">ACCESO INTERNO</p><h2>Portal de funcionarios</h2><p>Ingresá para consultar el calendario compartido de actividades y registrar nuevas instancias de cobertura de prensa.</p><a class="button button-primary" href="funcionarios.html">Ingresar a la agenda <span aria-hidden="true">→</span></a></div>
-    <div class="funcionarios-access-panel"><span class="access-icon" aria-hidden="true">↗</span><strong>Agenda de actividades</strong><p>Acceso para funcionarios autorizados de MIDES Florida.</p><a href="funcionarios.html">Abrir acceso de funcionarios</a></div>
-  </section>
-
-  <section id="redes-mides" class="social-section" aria-labelledby="social-title">
+    <div class="press-home-layout">
+      <div class="press-main-column">
+        <section id="newsGrid" class="news-grid" aria-live="polite"></section>
+        <div class="news-more-wrap"><button id="newsMoreButton" class="news-more-button" type="button" hidden>Ver más comunicados</button></div>
+      </div>
+        <aside id="redes-mides" class="social-sidebar" aria-labelledby="social-title">
     <div class="social-copy">
       <p class="eyebrow blue">CONECTÁ CON MIDES FLORIDA</p>
       <h2 id="social-title">La información también está en nuestras redes</h2>
@@ -85,7 +82,7 @@
           <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/mides_florida/" data-instgrm-version="14" style="background:#fff;border:0;margin:0 auto;max-width:540px;min-width:280px;width:100%;"></blockquote>
         </div>
         <p class="social-feed-note">Vista previa del perfil público. Instagram controla qué publicaciones muestra y cómo se actualizan.</p>
-      </section>
+      </aside>
       <section class="social-feed-card" aria-label="Facebook de MIDES Florida">
         <div class="social-feed-heading"><span class="social-symbol facebook-symbol" aria-hidden="true">f</span><div><strong>Facebook</strong><small>Página pública de MIDES Florida</small></div><a href="https://www.facebook.com/profile.php?id=61595257436521" target="_blank" rel="noopener noreferrer">Abrir perfil ↗</a></div>
         <div class="facebook-posts-preview">
@@ -96,11 +93,20 @@
       </section>
     </div>
   </section>
+    </div>
+  </section>
+
+  <section id="acceso-funcionarios" class="resources funcionarios-access">
+    <div><p class="eyebrow blue">ACCESO INTERNO</p><h2>Portal de funcionarios</h2><p>Ingresá para consultar el calendario compartido de actividades y registrar nuevas instancias de cobertura de prensa.</p><a class="button button-primary" href="funcionarios.html">Ingresar a la agenda <span aria-hidden="true">→</span></a></div>
+    <div class="funcionarios-access-panel"><span class="access-icon" aria-hidden="true">↗</span><strong>Agenda de actividades</strong><p>Acceso para funcionarios autorizados de MIDES Florida.</p><a href="funcionarios.html">Abrir acceso de funcionarios</a></div>
+  </section>
+
+
 </main>
 
 <footer><span>Ministerio de Desarrollo Social · MIDES Florida</span><a href="https://www.gub.uy/ministerio-desarrollo-social/" target="_blank" rel="noopener">Sitio oficial MIDES</a></footer>
 <script src="config.js?v=20261014-3"></script>
-<script src="assets/js/app.js?v=20261109-1"></script>
+<script src="assets/js/app.js?v=20261111-home-layout"></script>
 <script async src="https://www.instagram.com/embed.js"></script>
 </body>
 </html>
