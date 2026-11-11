@@ -277,7 +277,25 @@ function readContacts_(){
 }
 function importContacts_(){return syncContactsNormalized_();}
 function listContacts_(){ensureContactsStructure_();return readContacts_();}
-function saveContact_(p){const sh=getNamedSheet_(CONTACTS_SHEET,CONTACT_HEADERS),id=p.id||'C-'+Utilities.getUuid().slice(0,8),old=readContacts_().find(x=>x.id===id),item=[id,p.nombre||'',p.apellido||'',p.nombreCompleto||[p.nombre,p.apellido].filter(Boolean).join(' '),p.medio||'',p.cargo||'',p.email||'',p.telefono||'',p.localidad||'',p.listas||'',p.estado||old?.estado||'Activo',p.observaciones||old?.observaciones||'',formatDateTime_(new Date())];const rows=sh.getDataRange().getValues();let n=-1;for(let i=1;i<rows.length;i++)if(String(rows[i][0])===id){n=i+1;break;}if(n<0)sh.appendRow(item);else sh.getRange(n,1,1,CONTACT_HEADERS.length).setValues([item]);return contactRow_(item);}
+function saveContact_(p){
+  const sh=getNamedSheet_(CONTACTS_SHEET,CONTACT_HEADERS);
+  const id=String(p.id||'C-'+Utilities.getUuid().slice(0,8));
+  const old=readContacts_().find(x=>x.id===id);
+  const has=name=>Object.prototype.hasOwnProperty.call(p,name);
+  const value=(name,fallback='')=>has(name)?String(p[name]??''):String(fallback??'');
+  const nombre=value('nombre',old&&old.nombre),apellido=value('apellido',old&&old.apellido);
+  const item=[
+    id,nombre,apellido,value('nombreCompleto',old&&old.nombreCompleto)||[nombre,apellido].filter(Boolean).join(' '),
+    value('medio',old&&old.medio),value('cargo',old&&old.cargo),value('email',old&&old.email),
+    value('telefono',old&&old.telefono),value('localidad',old&&old.localidad),
+    value('listas',old&&old.listas),value('estado',old&&old.estado||'Activo'),
+    value('observaciones',old&&old.observaciones),formatDateTime_(new Date())
+  ];
+  const rows=sh.getDataRange().getValues();let n=-1;
+  for(let i=1;i<rows.length;i++)if(String(rows[i][0])===id){n=i+1;break;}
+  if(n<0)sh.appendRow(item);else sh.getRange(n,1,1,CONTACT_HEADERS.length).setValues([item]);
+  return contactRow_(item);
+}
 function setContactStatus_(id,status){const c=readContacts_().find(x=>x.id===id);if(!c)return null;c.estado=status;return saveContact_(c);}
 function ensureLists_(){const sh=getNamedSheet_(LISTS_SHEET,LIST_HEADERS),have=sh.getDataRange().getValues().slice(1).map(r=>String(r[1]).toLowerCase());['Prensa Florida','Radios','Televisión','Prensa escrita','Medios digitales','Medios nacionales','Institucional','Prioritarios'].forEach(n=>{if(!have.includes(n.toLowerCase()))sh.appendRow(['L-'+Utilities.getUuid().slice(0,8),n,'','Activa',formatDateTime_(new Date()),formatDateTime_(new Date())]);});}
 function listMailingLists_(){ensureLists_();const sh=getSpreadsheet_().getSheetByName(LISTS_SHEET);return sh.getLastRow()<2?[]:sh.getRange(2,1,sh.getLastRow()-1,LIST_HEADERS.length).getValues().filter(r=>r[0]).map(r=>({id:String(r[0]),nombre:String(r[1]),descripcion:String(r[2]||''),estado:String(r[3]||'Activa'),fechaCreacion:formatDateTime_(r[4]),fechaActualizacion:formatDateTime_(r[5])}));}
