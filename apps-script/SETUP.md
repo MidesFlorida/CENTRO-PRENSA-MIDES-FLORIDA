@@ -24,13 +24,13 @@ El código solo lee esa propiedad y no la genera, muestra ni guarda dentro del a
 
 ## Carga multimedia y videos múltiples
 
-La versión `2026-11-16-centro-prensa-v5-multi-video-rest` utiliza la API REST de Google Drive con el token OAuth de Apps Script para iniciar y completar cargas multimedia, evitando la dependencia de `DriveApp` en las cargas de videos, fotos de galería y audio. La hoja `Comunicados` incorpora automáticamente la columna `Videos`; no borres ni reordenes las columnas existentes. Los videos se almacenan como una lista JSON y las columnas históricas del primer video se conservan para compatibilidad.
+La versión `2026-11-16-centro-prensa-v6-drive-parent-fallback` utiliza la API REST de Google Drive con el token OAuth de Apps Script para iniciar y completar cargas multimedia, evitando la dependencia de `DriveApp` en las cargas de videos, fotos de galería y audio. La hoja `Comunicados` incorpora automáticamente la columna `Videos`; no borres ni reordenes las columnas existentes. Los videos se almacenan como una lista JSON y las columnas históricas del primer video se conservan para compatibilidad.
 
 En el editor se pueden seleccionar varios videos en una sola operación. Cada archivo se carga por fragmentos y se asocia al mismo comunicado. La vista pública reproduce todos los videos guardados.
 
 ## Autenticación del panel editorial
 
-El ingreso y la carga de comunicados son operaciones separadas. El panel primero consulta `?action=ping` para confirmar la versión del despliegue; luego envía `action=auth`, que valida `CENTRO_PRENSA_ADMIN_KEY` sin leer Google Sheets. Tras aceptar la clave, el panel carga los comunicados. Si se informa una versión diferente a `2026-11-16-centro-prensa-v5-multi-video-rest`, hay que copiar el `Code.gs` vigente y publicar una Nueva versión en la implementación asociada a la URL de `config.js`.
+El ingreso y la carga de comunicados son operaciones separadas. El panel primero consulta `?action=ping` para confirmar la versión del despliegue; luego envía `action=auth`, que valida `CENTRO_PRENSA_ADMIN_KEY` sin leer Google Sheets. Tras aceptar la clave, el panel carga los comunicados. Si se informa una versión diferente a `2026-11-16-centro-prensa-v6-drive-parent-fallback`, hay que copiar el `Code.gs` vigente y publicar una Nueva versión en la implementación asociada a la URL de `config.js`.
 
 ## Inicialización y verificación
 
@@ -43,7 +43,7 @@ El ingreso y la carga de comunicados son operaciones separadas. El panel primero
 7. Ejecutar autorizarCentroPrensa una vez y aceptar los permisos de Google Sheets, Drive y servicios asociados.
 8. Ir a **Implementar → Gestionar implementaciones**, abrir la implementación web existente y pulsar **Editar**. Elegir **Nueva versión** y desplegar. Mantener la ejecución como el propietario y el acceso que ya usa la plataforma.
 9. Confirmar que la URL /exec de esa implementación coincide con apiUrl en config.js. Si se creó una implementación distinta, actualizar config.js con su URL.
-10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-11-16-centro-prensa-v5-multi-video-rest"`. La sala pública admite temporalmente esas versiones anteriores.
+10. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-11-16-centro-prensa-v6-drive-parent-fallback"`. La sala pública admite temporalmente esas versiones anteriores.
 11. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
 12. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Luego, desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
 
