@@ -132,7 +132,7 @@ function checkEditorialApiVersion(){
   }catch(err){cleanup();reject(err)}
  });
 }
-const REQUIRED_EDITOR_API_VERSION="2026-11-16-centro-prensa-v5-multi-video-rest";
+const REQUIRED_EDITOR_API_VERSION="2026-11-16-centro-prensa-v6-drive-parent-fallback";
 async function authorizeEditorial(){
   if(editorialAuthorized)return true;
   if(editorialAuthPromise)return editorialAuthPromise;
