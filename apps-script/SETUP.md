@@ -22,6 +22,12 @@ La clave no se escribe en `Code.gs`, en `config.js` ni en GitHub. La define el a
 
 El código solo lee esa propiedad y no la genera, muestra ni guarda dentro del archivo. Si el acceso falla, ejecutar `diagnosticoClaveEditorial`: informa solamente si la propiedad existe, sin revelar su valor. Asegurate de crear la propiedad en el mismo proyecto de Apps Script que se implementa como aplicación web.
 
+## Carga multimedia y videos múltiples
+
+La versión `2026-11-16-centro-prensa-v5-multi-video-rest` utiliza la API REST de Google Drive con el token OAuth de Apps Script para iniciar y completar cargas multimedia, evitando la dependencia de `DriveApp` en las cargas de videos, fotos de galería y audio. La hoja `Comunicados` incorpora automáticamente la columna `Videos`; no borres ni reordenes las columnas existentes. Los videos se almacenan como una lista JSON y las columnas históricas del primer video se conservan para compatibilidad.
+
+En el editor se pueden seleccionar varios videos en una sola operación. Cada archivo se carga por fragmentos y se asocia al mismo comunicado. La vista pública reproduce todos los videos guardados.
+
 ## Autenticación del panel editorial
 
 El ingreso y la carga de comunicados son operaciones separadas. El panel primero consulta `?action=ping` para confirmar la versión del despliegue; luego envía `action=auth`, que valida `CENTRO_PRENSA_ADMIN_KEY` sin leer Google Sheets. Tras aceptar la clave, el panel carga los comunicados. Si se informa una versión diferente a `2026-11-16-centro-prensa-v5-multi-video-rest`, hay que copiar el `Code.gs` vigente y publicar una Nueva versión en la implementación asociada a la URL de `config.js`.
