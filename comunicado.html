@@ -55,7 +55,12 @@ function renderGallery(photos){
 }
 async function load(){if(!api||!id){showError();return}try{const r=await fetch(api+"?action=get&id="+encodeURIComponent(id),{cache:"no-store"}),d=await r.json();if(!d.ok||!d.item){showError();return}const x=d.item;document.title=x.titulo+" | Centro de Prensa";document.getElementById("title").textContent=x.titulo;document.getElementById("date").textContent=[formatDate(x.fecha),x.tag].filter(Boolean).join(" · ");document.getElementById("content").innerHTML=esc(x.contenido).replace(/\n/g,"<br>");
  if(x.fotoPrincipal){document.getElementById("cover").innerHTML='<div class="article-cover-wrap">'+imageHtml(x.fotoPrincipal,"article-cover")+'</div>'+downloadButton(x.fotoPrincipal,"","Descargar fotografía principal");}
- let media=false;const video=videoEmbed(x.videoUrl||"",x.videoDriveFileId||"");if(video){document.getElementById("video").innerHTML=video+downloadButton(x.videoUrl||"",x.videoDriveFileId||"","Descargar video");document.getElementById("video").hidden=false;media=true;}
+ let media=false;
+ const videos=Array.isArray(x.videos)&&x.videos.length?x.videos:(x.videoDriveFileId?[{fileId:x.videoDriveFileId,fileUrl:x.videoDriveUrl,previewUrl:"",name:"Video"}]:(x.videoUrl?[{fileUrl:x.videoUrl,name:"Video"}]:[]));
+ if(videos.length){
+  const host=document.getElementById("video");host.innerHTML='<h2 class="media-heading">'+(videos.length===1?'Video de la actividad':'Videos de la actividad')+'</h2>'+videos.map((v,i)=>{const url=v.previewUrl||v.fileUrl||v.url||"",fid=v.fileId||driveId(url);return '<div class="article-video-item"><h3 class="media-heading">'+esc(v.name||('Video '+(i+1)))+'</h3>'+videoEmbed(url,fid).replace('<h2 class="media-heading">Video de la actividad</h2>','')+downloadButton(url,fid,'Descargar video '+(i+1))+'</div>'}).join('');
+  host.hidden=false;media=true;
+ }
  const photos=(x.fotos||[]).filter(p=>/^https?:\/\//i.test(p));if(renderGallery(photos))media=true;
  if(x.audioUrl||x.audioDriveFileId){const audioId=x.audioDriveFileId||driveId(x.audioUrl||"");const audioPlayer=audioId?'<iframe class="article-audio-frame" src="https://drive.google.com/file/d/'+encodeURIComponent(audioId)+'/preview" title="Reproductor de nota de audio" loading="lazy" allow="autoplay"></iframe>':'<audio controls preload="metadata" src="'+esc(x.audioUrl)+'" style="width:100%"></audio>';document.getElementById("audio").innerHTML='<h2 class="media-heading">Nota de audio</h2>'+audioPlayer+downloadButton(x.audioUrl||"",audioId,"Descargar audio");document.getElementById("audio").hidden=false;media=true;}
  document.getElementById("media").hidden=!media;
