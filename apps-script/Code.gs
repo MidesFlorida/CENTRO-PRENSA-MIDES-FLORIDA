@@ -88,7 +88,9 @@ function autorizarCentroPrensa(){
   const ss=getSpreadsheet_();if(!ss)throw new Error('No se pudo acceder a la hoja de cálculo.');
   prepararHojasCentroPrensa_();
   const about=driveRestRequest_('https://www.googleapis.com/drive/v3/about?fields=user',{method:'get'});
-  let message='Permisos de Google Sheets, Google Drive API y solicitudes externas verificados.';
+  // Fuerza la solicitud del permiso de envío de correo durante la autorización inicial.
+  const mailQuota=MailApp.getRemainingDailyQuota();
+  let message='Permisos de Google Sheets, Google Drive API, solicitudes externas y correo institucional verificados. Cuota diaria de correo disponible: '+mailQuota+'.';
   if(CONFIG.driveRootFolderId){
     try{driveRestRequest_('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(CONFIG.driveRootFolderId)+'?fields=id,name',{method:'get'});}
     catch(err){message+=' La carpeta configurada no está disponible para esta cuenta; se utilizará la carpeta alternativa Centro de Prensa MIDES Florida. Detalle: '+String(err);}
