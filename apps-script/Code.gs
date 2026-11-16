@@ -6,7 +6,7 @@ const CONFIG = {
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-10-26-centro-prensa-v4-auth-separated';
+const API_VERSION = '2026-11-16-centro-prensa-v5-multi-video-rest';
 const EDITORIAL_KEY_PROPERTY_ = 'CENTRO_PRENSA_ADMIN_KEY';
 
 // La clave se define manualmente en Configuración del proyecto → Propiedades de secuencia de comandos.
