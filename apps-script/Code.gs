@@ -6,7 +6,7 @@ const CONFIG = {
 };
 
 // Permite comprobar desde la URL pública qué versión del backend está desplegada.
-const API_VERSION = '2026-11-16-centro-prensa-v5-multi-video-rest';
+const API_VERSION = '2026-11-16-centro-prensa-v6-drive-parent-fallback';
 const EDITORIAL_KEY_PROPERTY_ = 'CENTRO_PRENSA_ADMIN_KEY';
 
 // La clave se define manualmente en Configuración del proyecto → Propiedades de secuencia de comandos.
@@ -638,13 +638,22 @@ function uploadCover_(p){
   return{url,fileId:file.id,driveUrl:file.webViewLink||('https://drive.google.com/file/d/'+file.id+'/view'),name:file.name||fileName,folderName:folder.name};
 }
 function driveGetOrCreateCommunicationFolderRest_(title){
-  let parentId='root';
+  const folderName=safeFolderName_(title);
+  // Primero intenta la carpeta configurada. Tener permiso de lectura sobre ella
+  // no garantiza permiso para crear archivos o subcarpetas.
   if(CONFIG.driveRootFolderId){
-    try{parentId=driveRestRequest_('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(CONFIG.driveRootFolderId)+'?fields=id,name',{method:'get'}).id;}
-    catch(err){console.warn('La carpeta configurada no está disponible; se intentará Mi unidad. '+String(err));}
+    try{
+      const configured=driveRestRequest_('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(CONFIG.driveRootFolderId)+'?fields=id,name,mimeType,capabilities(canAddChildren)',{method:'get'});
+      if(configured.capabilities&&configured.capabilities.canAddChildren===false)throw new Error('La cuenta ejecutora no puede agregar archivos a la carpeta configurada.');
+      return findOrCreateFolderRest_(configured.id,folderName);
+    }catch(err){
+      console.warn('La carpeta Drive configurada no permite crear contenido. Se cambia automáticamente a Mi unidad. '+String(err));
+    }
   }
-  if(parentId==='root')parentId=findOrCreateFolderRest_('root','Centro de Prensa MIDES Florida').id;
-  return findOrCreateFolderRest_(parentId,safeFolderName_(title));
+  // Carpeta propia de la cuenta que ejecuta el Web App, no una carpeta compartida.
+  const rootFolder=findOrCreateFolderRest_('root','Centro de Prensa MIDES Florida');
+  try{return findOrCreateFolderRest_(rootFolder.id,folderName);}
+  catch(err){throw new Error('No se pudo crear la carpeta del comunicado ni en la carpeta configurada ni en Mi unidad. Verificá que la cuenta que ejecuta Apps Script tenga espacio y permiso para crear archivos en su Drive. Detalle: '+String(err));}
 }
 function findOrCreateFolderRest_(parentId,name){
   const escaped=String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
