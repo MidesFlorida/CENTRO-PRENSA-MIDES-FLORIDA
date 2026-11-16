@@ -40,12 +40,15 @@ El ingreso y la carga de comunicados son operaciones separadas. El panel primero
 4. Guardar el proyecto.
 5. En el selector de funciones, ejecutar setup y aceptar los permisos solicitados.
 6. Revisar el registro de ejecución. La función devuelve un diagnóstico de pestañas esperadas, filas y columnas. Si aparece un error, no continuar con el despliegue hasta corregirlo.
-7. Ejecutar autorizarCentroPrensa una vez y aceptar los permisos de Google Sheets, Drive y servicios asociados.
-10. Ir a **Implementar → Gestionar implementaciones**, abrir la implementación web existente y pulsar **Editar**. Elegir **Nueva versión** y desplegar. Mantener la ejecución como el propietario y el acceso que ya usa la plataforma.
-11. Confirmar que la URL /exec de esa implementación coincide con apiUrl en config.js. Si se creó una implementación distinta, actualizar config.js con su URL.
-12. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. Durante el retorno a la implementación conocida, también puede aparecer `apiVersion:"2026-10-23-mapa5k-v4"`; después de copiar y desplegar el Code.gs limpio debe aparecer `apiVersion:"2026-11-16-centro-prensa-v6-drive-parent-fallback"`. La sala pública admite temporalmente esas versiones anteriores.
-13. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
-14. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Luego, desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
+7. En el editor de Apps Script, abrir **Configuración del proyecto** y activar la opción para mostrar el archivo de manifiesto `appsscript.json` en el editor, si todavía no aparece.
+8. Copiar el contenido del archivo `appsscript.json` de la raíz de este repositorio al manifiesto del proyecto. Incluye los permisos OAuth necesarios para `UrlFetchApp.fetch` (`script.external_request`), Google Sheets, Drive, identidad del usuario y envío de correo (`script.send_mail`).
+9. Guardar y, desde el selector de funciones, ejecutar `autorizarCentroPrensa`. Aceptar todos los permisos que solicite Google. La función comprueba Sheets, consulta Drive mediante UrlFetchApp y consulta la cuota de MailApp para activar la autorización de esos servicios.
+10. Si no aparece la ventana de permisos o continúa el error de `UrlFetchApp.fetch`, revisar que el manifiesto se haya guardado en el mismo proyecto de Apps Script que utiliza la URL de producción; volver a ejecutar `autorizarCentroPrensa` con la cuenta propietaria.
+11. Ir a **Implementar → Gestionar implementaciones**, abrir la implementación web existente y pulsar **Editar**. Elegir **Nueva versión** y desplegar. Mantener la ejecución como el propietario y el acceso que ya usa la plataforma.
+12. Confirmar que la URL /exec de esa implementación coincide con apiUrl en config.js. Si se creó una implementación distinta, actualizar config.js con su URL.
+13. Abrir la API con ?action=ping. Debe devolver JSON con `ok:true`, el nombre del servicio y `jsonpSupported:true`. La versión esperada del backend sigue siendo `2026-11-16-centro-prensa-v6-drive-parent-fallback`.
+14. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
+15. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
 
 ## Pestañas que administra el sistema
 
