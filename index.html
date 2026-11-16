@@ -3,108 +3,121 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Centro de Prensa de MIDES Florida">
-<title>Centro de Prensa | MIDES Florida</title>
-<link rel="stylesheet" href="assets/css/style.css?v=20261111-home-layout">
+<meta name="description" content="MIDES Florida: información institucional, actividades, programas, convocatorias y sala de prensa.">
+<meta name="theme-color" content="#005ca9">
+<title>MIDES Florida | Información institucional y comunidad</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20261116-portal-institucional">
 <link rel="icon" type="image/png" href="https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png">
 </head>
 <body>
-<header class="site-header">
-  <div class="brand-wrap">
+<header class="site-header institutional-header">
+  <a class="brand-wrap" href="index.html" aria-label="MIDES Florida, inicio">
     <img class="brand-logo" src="https://www.gub.uy/ministerio-desarrollo-social/sites/ministerio-desarrollo-social/files/styles/documento/public/imagenes/publicaciones/logo_mides.png" alt="Ministerio de Desarrollo Social">
-    <div class="brand-divider"></div>
-    <div class="brand-name"><strong>CENTRO DE PRENSA</strong><span>MIDES Florida</span></div>
-  </div>
-  <nav class="top-nav" aria-label="Navegación principal">
-    <a href="#actualidad">Actualidad</a>
-    <a class="funcionarios-link" href="funcionarios.html">Funcionarios</a>
-    <a class="admin-link" href="admin.html">Acceso editorial</a>
+    <span class="brand-divider" aria-hidden="true"></span>
+    <span class="brand-name"><strong>MIDES FLORIDA</strong><span>Ministerio de Desarrollo Social</span></span>
+  </a>
+  <nav class="top-nav institutional-nav" aria-label="Navegación principal">
+    <a href="#institucion">Institución</a>
+    <a href="#agenda-publica">Actividades</a>
+    <a href="#actualidad">Noticias</a>
+    <a href="#redes-mides">Redes</a>
+    <a class="nav-press-link" href="#actualidad">Sala de prensa</a>
   </nav>
-  <div class="site-module-actions" aria-label="Navegación del sitio">
-  <a class="site-home-button" href="index.html">⌂ Volver a inicio</a>
-  <a class="site-exit-button" href="https://www.gub.uy/ministerio-desarrollo-social/" onclick="return confirm('Vas a salir del Centro de Prensa MIDES Florida. ¿Continuar?')">↗ Salir del sitio</a>
-</div>
+  <div class="site-module-actions">
+    <a class="site-home-button" href="funcionarios.html">Acceso funcionarios</a>
+    <a class="site-exit-button" href="https://www.gub.uy/ministerio-desarrollo-social/" target="_blank" rel="noopener">MIDES Uruguay ↗</a>
+  </div>
 </header>
 
-<main>
-  <section id="inicio" class="hero">
-    <div class="hero-copy-wrap">
+<main class="institutional-main">
+  <section id="institucion" class="institutional-hero">
+    <div class="institutional-hero-copy">
       <p class="eyebrow">MINISTERIO DE DESARROLLO SOCIAL · FLORIDA</p>
-      <h1>Centro de Prensa</h1>
-      <p class="hero-lead">Información oficial, comunicados y materiales para facilitar la cobertura periodística de las actividades del MIDES en Florida.</p>
+      <h1>Un MIDES más cerca de la comunidad.</h1>
+      <p class="hero-lead">Información, actividades y propuestas para acompañar a las personas, fortalecer derechos y acercar las políticas sociales a todo el departamento.</p>
       <div class="hero-actions">
-        <a class="button button-light" href="#actualidad">Ver actualidad</a>
-        <a class="button button-outline" href="funcionarios.html">Acceso de funcionarios</a>
+        <a class="button button-light" href="#agenda-publica">Conocer las actividades</a>
+        <a class="button button-outline" href="#actualidad">Ir a noticias y comunicados</a>
       </div>
     </div>
-    <div class="hero-panel">
-      <span class="panel-label">SALA DE PRENSA</span>
-      <strong>Material oficial</strong>
-      <p>Un espacio centralizado para comunicados, fotografías, videos y documentos.</p>
+    <div class="institutional-hero-aside">
+      <span class="hero-aside-kicker">MIDES FLORIDA</span>
+      <strong>Información pública y canales de comunicación</strong>
+      <p>Este espacio reúne novedades institucionales, agenda de actividades y materiales oficiales para la ciudadanía y los medios de comunicación.</p>
+      <a href="https://www.gub.uy/ministerio-desarrollo-social/" target="_blank" rel="noopener">Conocé el sitio oficial del MIDES ↗</a>
     </div>
   </section>
 
+  <section class="quick-access" aria-label="Accesos destacados">
+    <a href="#agenda-publica"><span class="quick-icon" aria-hidden="true">▦</span><span><strong>Agenda pública</strong><small>Actividades y encuentros en Florida</small></span><b aria-hidden="true">→</b></a>
+    <a href="#actualidad"><span class="quick-icon" aria-hidden="true">▤</span><span><strong>Noticias y comunicados</strong><small>Información institucional actualizada</small></span><b aria-hidden="true">→</b></a>
+    <a href="#redes-mides"><span class="quick-icon" aria-hidden="true">◎</span><span><strong>Redes sociales</strong><small>Seguí nuestras publicaciones</small></span><b aria-hidden="true">→</b></a>
+    <a href="https://www.gub.uy/ministerio-desarrollo-social/" target="_blank" rel="noopener"><span class="quick-icon" aria-hidden="true">↗</span><span><strong>Servicios MIDES</strong><small>Trámites e información nacional</small></span><b aria-hidden="true">↗</b></a>
+  </section>
 
-  <section id="proximas-actividades" class="section upcoming-section">
+  <section id="agenda-publica" class="section upcoming-section institutional-section">
     <div class="section-heading">
-      <div><p class="eyebrow blue">AGENDA INSTITUCIONAL</p><h2>Próximas actividades</h2><p class="upcoming-intro">Conocé las actividades del MIDES en Florida.</p></div>
-      <a class="public-calendar-link" href="funcionarios.html">Acceso de funcionarios <span aria-hidden="true">→</span></a>
+      <div><p class="eyebrow blue">EN TERRITORIO</p><h2>Próximas actividades</h2><p class="upcoming-intro">Conocé dónde estaremos y qué propuestas se desarrollan en el departamento.</p></div>
+      <span class="section-side-note">Agenda institucional de MIDES Florida</span>
     </div>
     <div id="upcomingActivities" class="upcoming-list" aria-live="polite"><div class="empty">Cargando próximas actividades…</div></div>
   </section>
 
-  <section id="actualidad" class="section">
+  <section id="actualidad" class="section institutional-news-section">
     <div class="section-heading">
-      <div><p class="eyebrow blue">ACTUALIDAD</p><h2>Últimos comunicados</h2></div>
+      <div><p class="eyebrow blue">INFORMACIÓN INSTITUCIONAL</p><h2>Noticias y comunicados</h2><p class="upcoming-intro">Novedades, programas, convocatorias y actividades de MIDES Florida.</p></div>
       <span id="resultCount" class="result-count"></span>
     </div>
     <div class="toolbar">
-      <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar comunicados, actividades o temas..." aria-label="Buscar contenidos"></label>
+      <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar noticias, actividades o temas..." aria-label="Buscar contenidos"></label>
       <select id="category" aria-label="Filtrar por categoría">
         <option value="">Todas las categorías</option><option>Actividad</option><option>Programa</option><option>Comunicado</option><option>Institucional</option><option>Convocatoria</option>
       </select>
     </div>
-    <div class="press-home-layout">
+    <div class="press-home-layout institutional-press-layout">
       <div class="press-main-column">
         <section id="newsGrid" class="news-grid" aria-live="polite"></section>
-        <div class="news-more-wrap"><button id="newsMoreButton" class="news-more-button" type="button" hidden>Ver más comunicados</button></div>
+        <div class="news-more-wrap"><button id="newsMoreButton" class="news-more-button" type="button" hidden>Ver más publicaciones</button></div>
       </div>
-        <aside id="redes-mides" class="social-sidebar" aria-labelledby="social-title">
-    <div class="social-copy">
-      <p class="eyebrow blue">CONECTÁ CON MIDES FLORIDA</p>
-      <h2 id="social-title">La información también está en nuestras redes</h2>
-      <p>Seguí las actividades, convocatorias y novedades de MIDES Florida. Abrí nuestros perfiles oficiales para consultar las publicaciones más recientes.</p>
+      <aside class="press-sidebar-card">
+        <p class="eyebrow blue">PARA PERIODISTAS Y MEDIOS</p>
+        <h2>Sala de prensa</h2>
+        <p>Accedé a comunicados oficiales y materiales para facilitar la cobertura de las actividades de MIDES en Florida.</p>
+        <ul><li>Comunicados y novedades</li><li>Fotografías y galerías</li><li>Videos y notas de audio</li></ul>
+        <a class="button button-primary" href="#actualidad">Consultar comunicados →</a>
+      </aside>
     </div>
+  </section>
+
+  <section id="redes-mides" class="section social-section institutional-social-section">
+    <div class="section-heading"><div><p class="eyebrow blue">CANALES DE COMUNICACIÓN</p><h2>Conectá con MIDES Florida</h2><p class="upcoming-intro">Seguinos para conocer las actividades, convocatorias y novedades.</p></div></div>
     <div class="social-feed-grid">
       <section class="social-feed-card" aria-label="Instagram de MIDES Florida">
         <div class="social-feed-heading"><span class="social-symbol instagram-symbol" aria-hidden="true">◎</span><div><strong>Instagram</strong><small>@mides_florida · Perfil público</small></div><a href="https://www.instagram.com/mides_florida/" target="_blank" rel="noopener noreferrer">Abrir perfil ↗</a></div>
-        <div class="instagram-profile-embed">
-          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/mides_florida/" data-instgrm-version="14" style="background:#fff;border:0;margin:0 auto;max-width:540px;min-width:280px;width:100%;"></blockquote>
-        </div>
-        <p class="social-feed-note">Vista previa del perfil público. Instagram controla qué publicaciones muestra y cómo se actualizan.</p>
-      </aside>
+        <div class="instagram-profile-embed"><blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/mides_florida/" data-instgrm-version="14" style="background:#fff;border:0;margin:0 auto;max-width:540px;min-width:280px;width:100%;"></blockquote></div>
+        <p class="social-feed-note">La vista previa depende de las opciones de inserción que habilite Instagram.</p>
+      </section>
       <section class="social-feed-card" aria-label="Facebook de MIDES Florida">
         <div class="social-feed-heading"><span class="social-symbol facebook-symbol" aria-hidden="true">f</span><div><strong>Facebook</strong><small>Página pública de MIDES Florida</small></div><a href="https://www.facebook.com/profile.php?id=61595257436521" target="_blank" rel="noopener noreferrer">Abrir perfil ↗</a></div>
-        <div class="facebook-posts-preview">
-          <div class="facebook-post-embed"><iframe title="Publicaciones de la página de MIDES Florida en Facebook" src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61595257436521&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false" width="500" height="600" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe></div>
-        </div>
+        <div class="facebook-posts-preview"><div class="facebook-post-embed"><iframe title="Publicaciones de MIDES Florida en Facebook" src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61595257436521&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false" width="500" height="600" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe></div></div>
         <a class="facebook-preview-button facebook-profile-fallback" href="https://www.facebook.com/profile.php?id=61595257436521" target="_blank" rel="noopener noreferrer">Abrir Facebook de MIDES Florida ↗</a>
-        <p class="social-feed-note">Vista previa de las publicaciones públicas de Facebook. La visualización depende de que Meta permita insertar esta página.</p>
+        <p class="social-feed-note">La visualización depende de que Meta permita insertar esta página.</p>
       </section>
     </div>
   </section>
-    </div>
+
+  <section class="community-contact-strip">
+    <div><p class="eyebrow">PRESENCIA TERRITORIAL</p><h2>Estamos para acercar respuestas y oportunidades.</h2><p>Consultá los canales oficiales del Ministerio para encontrar información sobre programas, servicios y políticas sociales.</p></div>
+    <a class="button button-light" href="https://www.gub.uy/ministerio-desarrollo-social/" target="_blank" rel="noopener">Visitar MIDES Uruguay ↗</a>
   </section>
 
-  <section id="acceso-funcionarios" class="resources funcionarios-access">
-    <div><p class="eyebrow blue">ACCESO INTERNO</p><h2>Portal de funcionarios</h2><p>Ingresá para consultar el calendario compartido de actividades y registrar nuevas instancias de cobertura de prensa.</p><a class="button button-primary" href="funcionarios.html">Ingresar a la agenda <span aria-hidden="true">→</span></a></div>
-    <div class="funcionarios-access-panel"><span class="access-icon" aria-hidden="true">↗</span><strong>Agenda de actividades</strong><p>Acceso para funcionarios autorizados de MIDES Florida.</p><a href="funcionarios.html">Abrir acceso de funcionarios</a></div>
+  <section class="resources funcionarios-access">
+    <div><p class="eyebrow blue">ACCESO INTERNO</p><h2>Portal de funcionarios</h2><p>Espacio de coordinación para consultar el calendario compartido y registrar actividades relevantes para la cobertura institucional.</p><a class="button button-primary" href="funcionarios.html">Ingresar a la agenda <span aria-hidden="true">→</span></a></div>
+    <div class="funcionarios-access-panel"><span class="access-icon" aria-hidden="true">↗</span><strong>Agenda de actividades</strong><p>Acceso exclusivo para funcionarios autorizados de MIDES Florida.</p><a href="funcionarios.html">Abrir acceso de funcionarios</a></div>
   </section>
-
-
 </main>
 
-<footer><span>Ministerio de Desarrollo Social · MIDES Florida</span><a href="https://www.gub.uy/ministerio-desarrollo-social/" target="_blank" rel="noopener">Sitio oficial MIDES</a></footer>
+<footer class="institutional-footer"><span>Ministerio de Desarrollo Social · MIDES Florida</span><div><a href="https://www.gub.uy/ministerio-desarrollo-social/" target="_blank" rel="noopener">Sitio oficial MIDES</a><a href="admin.html">Acceso editorial</a></div></footer>
 <script src="config.js?v=20261014-3"></script>
 <script src="assets/js/app.js?v=20261111-home-layout"></script>
 <script async src="https://www.instagram.com/embed.js"></script>
