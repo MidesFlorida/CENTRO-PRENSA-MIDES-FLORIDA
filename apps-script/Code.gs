@@ -83,33 +83,15 @@ function prepararHojasCentroPrensa_(){
 }
 
 function autorizarCentroPrensa(){
-  // Ejecutar manualmente desde Apps Script con la cuenta que implementa el Web App.
-  // Primero solicita los permisos básicos de Sheets y Drive y valida la carpeta configurada.
-  const ss=getSpreadsheet_();
-  if(!ss)throw new Error('No se pudo acceder a la hoja de cálculo.');
+  // Autoriza y verifica Google Sheets y Google Drive mediante la API REST.
+  // No depende de DriveApp, que puede devolver Acceso denegado en algunos despliegues.
+  const ss=getSpreadsheet_();if(!ss)throw new Error('No se pudo acceder a la hoja de cálculo.');
   prepararHojasCentroPrensa_();
-  let root;
-  try{
-    root=DriveApp.getRootFolder();
-    root.getName();
-  }catch(err){
-    throw new Error('Google Drive todavía no está autorizado para esta cuenta. Ejecutá esta función desde el editor de Apps Script, aceptá los permisos de Drive y volvé a ejecutarla. Detalle: '+String(err));
-  }
-  let message='Permisos de Google Sheets, Drive y solicitudes externas verificados.';
+  const about=driveRestRequest_('https://www.googleapis.com/drive/v3/about?fields=user',{method:'get'});
+  let message='Permisos de Google Sheets, Google Drive API y solicitudes externas verificados.';
   if(CONFIG.driveRootFolderId){
-    try{
-      DriveApp.getFolderById(CONFIG.driveRootFolderId).getName();
-    }catch(err){
-      // No bloquea la autorización general: getDriveRoot_ usará la carpeta alternativa de la aplicación.
-      message+=' La carpeta configurada no está disponible para esta cuenta; se utilizará la carpeta alternativa Centro de Prensa MIDES Florida en Mi unidad. Detalle: '+String(err);
-    }
-  }
-  const response=UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/about?fields=user',{
-    headers:{Authorization:'Bearer '+ScriptApp.getOAuthToken()},
-    muteHttpExceptions:true
-  });
-  if(response.getResponseCode()<200||response.getResponseCode()>=300){
-    throw new Error('Drive quedó accesible, pero la prueba de solicitudes externas devolvió HTTP '+response.getResponseCode()+': '+response.getContentText().slice(0,300));
+    try{driveRestRequest_('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(CONFIG.driveRootFolderId)+'?fields=id,name',{method:'get'});}
+    catch(err){message+=' La carpeta configurada no está disponible para esta cuenta; se utilizará la carpeta alternativa Centro de Prensa MIDES Florida. Detalle: '+String(err);}
   }
   return message;
 }
@@ -689,41 +671,48 @@ function joinByteArrays_(arrays){
   arrays.forEach(a=>{for(let i=0;i<a.length;i++)out[offset++]=a[i];});
   return out;
 }
+function driveCreateFileRest_(folderId,fileName,mimeType,bytes){
+  const boundary='----CentroPrensa'+Utilities.getUuid().replace(/-/g,'');
+  const metadata={name:fileName,mimeType:mimeType,parents:[folderId]};
+  const prefix='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(metadata)+'\r\n--'+boundary+'\r\nContent-Type: '+mimeType+'\r\nContent-Transfer-Encoding: binary\r\n\r\n';
+  const suffix='\r\n--'+boundary+'--';
+  const payload=joinByteArrays_([Utilities.newBlob(prefix).getBytes(),bytes,Utilities.newBlob(suffix).getBytes()]);
+  const response=UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink',{method:'post',contentType:'multipart/related; boundary='+boundary,headers:{Authorization:'Bearer '+ScriptApp.getOAuthToken()},payload:payload,muteHttpExceptions:true});
+  const status=response.getResponseCode();if(status<200||status>=300)throw new Error('Google Drive rechazó '+fileName+' (HTTP '+status+'): '+response.getContentText().slice(0,400));
+  const file=JSON.parse(response.getContentText());if(!file.id)throw new Error('Google Drive no devolvió el ID de '+fileName+'.');
+  setDriveFilePublic_(file.id);return file;
+}
 function uploadImages_(p){
   if(!p.id)throw new Error('Primero guardá el comunicado como borrador.');
   if(!p.files)throw new Error('No se recibieron imágenes.');
-  const files=JSON.parse(p.files),root=getDriveRoot_(),titleFolder=getOrCreateCommunicationFolder_(root,p.titulo||'Comunicado '+p.id),uploaded=[];
-  files.forEach(f=>{const data=String(f.data||'').replace(/^data:[^;]+;base64,/,'');const bytes=Utilities.base64Decode(data);const file=titleFolder.createFile(Utilities.newBlob(bytes,f.type||'image/jpeg',f.name));try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(err){}uploaded.push({id:file.getId(),name:file.getName(),url:file.getUrl(),directUrl:'https://drive.google.com/uc?export=view&id='+file.getId()});});
+  const files=JSON.parse(p.files),folder=driveGetOrCreateCommunicationFolderRest_(p.titulo||'Comunicado '+p.id),uploaded=[];
+  files.forEach(f=>{
+    const data=String(f.data||'').replace(/^data:[^;]+;base64,/,'');if(!data)throw new Error('No se recibieron datos para '+f.name);
+    const file=driveCreateFileRest_(folder.id,f.name||'imagen.jpg',f.type||'image/jpeg',Utilities.base64Decode(data));
+    uploaded.push({id:file.id,name:file.name,url:'https://drive.google.com/file/d/'+file.id+'/view',directUrl:'https://drive.google.com/uc?export=view&id='+file.id});
+  });
   const sh=getSheet_(),row=findRow_(sh,p.id);if(row<0)throw new Error('No se encontró el comunicado para asociar las imágenes.');
   const current=splitPhotos_(sh.getRange(row,10).getValue());sh.getRange(row,10).setValue(current.concat(uploaded.map(x=>x.directUrl)).join('\n'));sh.getRange(row,16).setValue(formatDateTime_(new Date()));SpreadsheetApp.flush();invalidateEditorialCache_();
-  return {folderId:titleFolder.getId(),folderName:titleFolder.getName(),items:uploaded};
+  return {folderId:folder.id,folderName:folder.name,items:uploaded};
 }
 function uploadAudio_(p){
   if(!p.id)throw new Error('Primero guardá el comunicado como borrador.');
   if(!p.data)throw new Error('No se recibió el archivo MP3.');
   if(!/\.mp3$/i.test(String(p.fileName||'')))throw new Error('La nota de audio debe ser un archivo MP3.');
-  const root=getDriveRoot_(),folder=getOrCreateCommunicationFolder_(root,p.titulo||'Comunicado '+p.id);
-  const data=String(p.data).replace(/^data:[^;]+;base64,/,'');
-  const bytes=Utilities.base64Decode(data);
-
-  const file=folder.createFile(Utilities.newBlob(bytes,'audio/mpeg',p.fileName));
-  try{file.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(err){}
-  const sh=getSheet_(),row=findRow_(sh,p.id);
-  if(row<0)throw new Error('No se encontró el comunicado para asociar el audio.');
-  const url='https://drive.google.com/uc?export=download&id='+file.getId();
-  sh.getRange(row,17,1,3).setValues([[url,file.getId(),file.getUrl()]]);
+  const folder=driveGetOrCreateCommunicationFolderRest_(p.titulo||'Comunicado '+p.id),data=String(p.data).replace(/^data:[^;]+;base64,/,'');
+  const file=driveCreateFileRest_(folder.id,p.fileName,'audio/mpeg',Utilities.base64Decode(data));
+  const sh=getSheet_(),row=findRow_(sh,p.id);if(row<0)throw new Error('No se encontró el comunicado para asociar el audio.');
+  const url='https://drive.google.com/uc?export=download&id='+file.id;
+  sh.getRange(row,17,1,3).setValues([[url,file.id,'https://drive.google.com/file/d/'+file.id+'/view']]);
   sh.getRange(row,16).setValue(formatDateTime_(new Date()));SpreadsheetApp.flush();invalidateEditorialCache_();
-  return {fileId:file.getId(),url:url,driveUrl:file.getUrl(),name:file.getName()};
+  return {fileId:file.id,url:url,driveUrl:'https://drive.google.com/file/d/'+file.id+'/view',name:file.name||p.fileName};
 }
 function diagnosticoDriveCentroPrensa(){
-  // Ejecutar manualmente desde el editor de Apps Script después de sincronizar este archivo.
-  // Permite confirmar qué permisos tiene realmente la identidad que ejecuta el proyecto.
   const result={ok:false,identity:'',rootAccessible:false,configuredFolderAccessible:false,detail:''};
   try{result.identity=Session.getEffectiveUser().getEmail()||'(correo no disponible)';}catch(err){result.identity='(no disponible: '+String(err)+')';}
-  try{const root=DriveApp.getRootFolder();result.rootAccessible=!!root.getId();}catch(err){result.detail='DriveApp no está autorizado o la cuenta ejecutora no tiene acceso: '+String(err);return result;}
-  if(CONFIG.driveRootFolderId){try{result.configuredFolderAccessible=!!DriveApp.getFolderById(CONFIG.driveRootFolderId).getId();}catch(err){result.detail='La carpeta configurada no es accesible; se usará la carpeta alternativa. '+String(err);}}
-  result.ok=result.rootAccessible;
-  if(!result.detail)result.detail=result.configuredFolderAccessible?'Drive y carpeta configurada accesibles.':'Drive accesible; la carpeta configurada no está disponible y se usará la alternativa.';
+  try{driveRestRequest_('https://www.googleapis.com/drive/v3/about?fields=user',{method:'get'});result.rootAccessible=true;}catch(err){result.detail='La API de Google Drive no está autorizada o la cuenta ejecutora no tiene acceso: '+String(err);return result;}
+  if(CONFIG.driveRootFolderId){try{driveRestRequest_('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(CONFIG.driveRootFolderId)+'?fields=id,name',{method:'get'});result.configuredFolderAccessible=true;}catch(err){result.detail='La carpeta configurada no es accesible; se usará la carpeta alternativa. '+String(err);}}
+  result.ok=result.rootAccessible;if(!result.detail)result.detail=result.configuredFolderAccessible?'Drive API y carpeta configurada accesibles.':'Drive API accesible; se utilizará la carpeta alternativa.';
   return result;
 }
 
