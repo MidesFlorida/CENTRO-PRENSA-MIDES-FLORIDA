@@ -596,7 +596,7 @@ function uploadVideoChunk_(p){
   if(!total||end<=start||end>total)throw new Error('Rango de video inválido.');
   const data=String(p.chunkData||'').replace(/^data:[^;]+;base64,/,'');if(!data)throw new Error('No se recibió el fragmento del video.');
   const bytes=Utilities.base64Decode(data);
-  const response=UrlFetchApp.fetch(p.sessionUrl,{method:'put',headers:{'Content-Range':'bytes '+start+'-'+(end-1)+'/'+total},payload:bytes,muteHttpExceptions:true,followRedirects:false});
+  const response=UrlFetchApp.fetch(p.sessionUrl,{method:'put',headers:{Authorization:'Bearer '+ScriptApp.getOAuthToken(),'Content-Range':'bytes '+start+'-'+(end-1)+'/'+total},payload:bytes,muteHttpExceptions:true,followRedirects:false});
   const status=response.getResponseCode();
   if(status===308){const h=response.getAllHeaders(),range=h.Range||h.range||'';return {complete:false,nextStart:range?parseInt(String(range).split('-').pop(),10)+1:end};}
   if(status!==200&&status!==201)throw new Error('Google Drive rechazó el fragmento: HTTP '+status+' '+response.getContentText().slice(0,500));
