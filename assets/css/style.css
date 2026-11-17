@@ -289,3 +289,11 @@
  .institutional-social-section .instagram-feed-grid{padding:8px}
  .institutional-social-section .facebook-posts-preview{padding:8px}
 }
+
+/* Facebook: el contenedor y el iframe se adaptan al ancho real de la columna */
+.institutional-social-section .facebook-posts-preview,
+.institutional-social-section .facebook-post-embed{display:block;width:100%;max-width:100%;min-width:0;overflow:hidden}
+.institutional-social-section .facebook-post-embed iframe{display:block;width:100%;max-width:100%;min-width:0;height:600px;border:0}
+@media(max-width:560px){
+ .institutional-social-section .facebook-post-embed iframe{height:560px}
+}
