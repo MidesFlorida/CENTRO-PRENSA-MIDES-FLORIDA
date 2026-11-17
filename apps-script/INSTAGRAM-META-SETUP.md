@@ -31,12 +31,13 @@ La sala pública consulta las últimas 9 publicaciones de la cuenta profesional 
 5. En el editor de Apps Script, seleccionar y ejecutar `probarInstagramFeed`.
 6. En el registro de ejecución, comprobar que indique `configured:true` y que el número de publicaciones sea mayor que cero. La función no registra el token.
 7. Si Google solicita permisos, aceptar `UrlFetchApp` para que Apps Script pueda consultar la API de Meta.
-8. Ir a **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar**. Mantener la misma URL /exec, la ejecución como propietario y el acceso público que ya utiliza el sitio.
-9. Abrir la web de MIDES Florida y recargar con Ctrl+F5.
+8. Seleccionar y ejecutar una vez `configurarRenovacionInstagram`; aceptar el permiso de activadores si Google lo solicita. Esto programa la renovación del token cada 30 días.
+9. Ir a **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar**. Mantener la misma URL /exec, la ejecución como propietario y el acceso público que ya utiliza el sitio.
+10. Abrir la web de MIDES Florida y recargar con Ctrl+F5.
 
 ## Renovación del token
 
-Los tokens de larga duración de Instagram vencen. Antes de que caduquen, abrir Apps Script y ejecutar `renovarTokenInstagram`. La función actualiza la propiedad privada y limpia la caché de publicaciones. Solo puede renovarse un token de larga duración que todavía esté vigente y cumpla las condiciones de Meta; si venció o fue revocado, habrá que autorizar la cuenta nuevamente.
+Los tokens de larga duración de Instagram vencen. La función `configurarRenovacionInstagram` instala un activador que ejecuta `renovarTokenInstagram` cada 30 días. La función actualiza la propiedad privada y limpia la caché de publicaciones. Solo puede renovarse un token de larga duración que todavía esté vigente y cumpla las condiciones de Meta; si venció o fue revocado, habrá que autorizar la cuenta nuevamente. Si el activador informa un error, revisar el registro de ejecución y renovar manualmente ejecutando `renovarTokenInstagram`.
 
 ## Diagnóstico
 
