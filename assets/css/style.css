@@ -313,3 +313,75 @@
 @media(max-width:760px){
  .institutional-social-section>.social-feed-grid{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* Diseño adaptable general: escritorio, laptop, tablet y móvil */
+img,video,iframe{max-width:100%}
+main,.institutional-main,.admin-main{width:100%;min-width:0}
+.institutional-main{max-width:1440px;margin:0 auto;padding-left:clamp(14px,3vw,42px);padding-right:clamp(14px,3vw,42px)}
+.site-header{gap:16px;flex-wrap:wrap}
+.brand-wrap,.top-nav,.site-module-actions,.header-module-links{min-width:0}
+.top-nav{flex-wrap:wrap}
+.institutional-hero,.institutional-section,.section,.editor-card,.press-home-layout,.local-services-grid,.social-feed-grid{min-width:0}
+.news-card,.local-service-card,.social-feed-card,.press-sidebar-card{min-width:0;overflow-wrap:anywhere}
+.news-image img,.article-cover,.article-gallery-image{max-width:100%}
+.form-grid>*{min-width:0}
+.form-grid input,.form-grid select,.form-grid textarea{max-width:100%;min-width:0}
+@media(min-width:1441px){
+ .institutional-main{max-width:1560px}
+}
+@media(max-width:1100px){
+ .site-header{align-items:flex-start}
+ .top-nav{gap:12px}
+ .institutional-hero{grid-template-columns:minmax(0,1.4fr) minmax(240px,.8fr);gap:24px}
+ .dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .site-header{position:relative;padding:12px 16px;align-items:center}
+ .institutional-header .top-nav{order:3;width:100%;justify-content:flex-start;gap:8px 14px}
+ .institutional-header .top-nav>a{display:inline-flex!important;font-size:12px}
+ .site-module-actions{justify-content:flex-start;width:100%}
+ .header-module-links{width:100%;justify-content:space-between;flex-wrap:wrap;gap:10px}
+ .institutional-main{padding-left:16px;padding-right:16px}
+ .institutional-hero{grid-template-columns:minmax(0,1fr);gap:20px}
+ .institutional-hero h1{font-size:clamp(34px,8vw,52px)}
+ .section-heading{align-items:flex-start;gap:12px;flex-wrap:wrap}
+ .press-home-layout{grid-template-columns:minmax(0,1fr)}
+ .local-services-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .institutional-social-section>.social-feed-grid{grid-template-columns:minmax(0,1fr)}
+ .admin-main{padding:24px 16px}
+ .editor-card{padding:18px}
+ .admin-calendar{overflow-x:auto}
+ .admin-cal-head,.admin-cal-grid{min-width:680px}
+}
+@media(max-width:520px){
+ main{padding-left:12px;padding-right:12px}
+ .institutional-main{padding-left:12px;padding-right:12px}
+ .site-header{padding:10px 12px}
+ .brand-logo{max-width:96px}
+ .brand-name strong{font-size:11px}
+ .brand-name span{font-size:11px}
+ .site-module-actions{gap:6px}
+ .site-module-actions a{flex:1 1 auto;white-space:normal;text-align:center}
+ .institutional-header .top-nav{gap:7px 11px}
+ .institutional-header .top-nav>a{font-size:11px}
+ .institutional-hero{padding:28px 20px;min-height:0}
+ .institutional-hero h1{font-size:34px}
+ .hero-lead{font-size:15px}
+ .quick-access{grid-template-columns:minmax(0,1fr)}
+ .section{padding:36px 0 46px}
+ .section-heading h2{font-size:26px}
+ .local-services-grid,.news-grid,.dashboard-grid,.resource-grid,.mailing-grid{grid-template-columns:minmax(0,1fr)}
+ .toolbar{flex-direction:column}
+ .toolbar select{width:100%;min-height:46px}
+ .editor-card{padding:14px;margin-left:-2px;margin-right:-2px}
+ .form-grid{grid-template-columns:minmax(0,1fr);gap:13px}
+ .form-grid .full{grid-column:auto}
+ .form-actions button,.draft-actions button{flex:1 1 auto}
+ .status-panel{flex-direction:column;gap:14px}
+ .admin-main .page-title h1{font-size:34px}
+ .admin-calendar-toolbar strong{min-width:0}
+ .toast{left:12px;right:12px;bottom:12px;min-width:0;max-width:none}
+ footer{padding:22px 14px}
+}
