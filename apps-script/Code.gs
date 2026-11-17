@@ -163,6 +163,15 @@ function probarInstagramFeed(){
 }
 
 /** Renueva un token de Instagram de larga duración antes de su vencimiento. */
+/** Instala una renovación automática cada 30 días. Ejecutar una sola vez después de guardar el token. */
+function configurarRenovacionInstagram(){
+  const exists=ScriptApp.getProjectTriggers().some(trigger=>trigger.getHandlerFunction()==='renovarTokenInstagram');
+  if(!exists)ScriptApp.newTrigger('renovarTokenInstagram').timeBased().everyDays(30).create();
+  const result={ok:true,configured:true,message:exists?'La renovación automática ya estaba configurada.':'Renovación automática programada cada 30 días.'};
+  Logger.log(JSON.stringify(result));
+  return result;
+}
+
 function renovarTokenInstagram(){
   const props=PropertiesService.getScriptProperties();
   const token=String(props.getProperty('MIDES_INSTAGRAM_ACCESS_TOKEN')||'').trim();
