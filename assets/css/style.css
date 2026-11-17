@@ -217,3 +217,30 @@
 @media(max-width:1050px){.institutional-header{flex-wrap:wrap;padding-top:12px;padding-bottom:12px}.institutional-nav{order:3;width:100%;justify-content:center;padding:8px 0 2px}.institutional-header .site-module-actions{margin-left:auto}.institutional-press-layout{grid-template-columns:1fr}.press-sidebar-card{display:grid;grid-template-columns:1fr 1fr;column-gap:22px}.press-sidebar-card .eyebrow,.press-sidebar-card h2{grid-column:1/-1}.press-sidebar-card ul{margin-top:0}}
 @media(max-width:760px){.institutional-hero{grid-template-columns:1fr;gap:25px;margin-top:14px;padding:34px 25px}.institutional-hero-aside{max-width:560px}.quick-access{grid-template-columns:1fr 1fr}.section-side-note{display:none}.community-contact-strip{align-items:flex-start;flex-direction:column}.institutional-nav{gap:16px;overflow-x:auto;justify-content:flex-start}.institutional-nav>a{font-size:12px}}
 @media(max-width:560px){.institutional-header{gap:8px}.institutional-header .brand-logo{width:82px}.institutional-header .brand-name strong{font-size:12px}.institutional-header .brand-name span{font-size:11px}.institutional-header .site-module-actions{width:auto}.institutional-header .site-module-actions a{font-size:10px;padding:8px}.quick-access{grid-template-columns:1fr 1fr;gap:8px}.quick-access>a{padding:12px 9px;gap:8px}.quick-access small{font-size:10px}.quick-icon{flex-basis:32px;height:32px;font-size:18px}.institutional-hero h1{font-size:40px}.institutional-hero .hero-lead{font-size:15px}.press-sidebar-card{display:block}.institutional-footer{align-items:flex-start;gap:14px}.institutional-footer>div{gap:12px}}
+
+
+/* Servicios locales de la Oficina Territorial MIDES Florida */
+.local-services-section{padding-top:58px;padding-bottom:58px;border-top:1px solid var(--line);background:#f7fafc}
+.local-services-section .section-heading{align-items:end;margin-bottom:25px}
+.services-official-link{font-size:12px;font-weight:800;color:var(--mides-blue);text-decoration:none;white-space:nowrap}
+.services-official-link:hover{text-decoration:underline}
+.local-services-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.local-service-card{display:flex;gap:14px;align-items:flex-start;padding:21px 18px;background:#fff;border:1px solid #e1e9ef;border-radius:8px;min-width:0}
+.local-service-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:50%;background:#eaf3f9;color:var(--mides-blue);font-size:21px;font-weight:800}
+.local-service-card h3{margin:1px 0 8px;color:var(--mides-dark);font-size:16px;line-height:1.25}
+.local-service-card p,.local-service-card li{color:var(--muted);font-size:12px;line-height:1.55}
+.local-service-card p{margin:0 0 7px}
+.local-service-card ul{margin:5px 0 0;padding-left:17px}
+.local-service-card li+li{margin-top:3px}
+.local-service-help{background:#edf4f8;border-color:#d8e6ef}
+.local-service-help a{display:inline-block;margin-top:7px;color:var(--mides-blue);font-size:12px;font-weight:800;text-decoration:none}
+.services-disclaimer{margin:15px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+.office-location{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(0,1.25fr);gap:22px;margin-top:32px;padding:22px;background:#fff;border:1px solid var(--line);border-radius:9px}
+.office-location-copy h2{margin:5px 0 14px;color:var(--mides-dark);font-size:24px}
+.office-location-copy p{margin:8px 0;color:var(--muted);font-size:13px;line-height:1.5}
+.office-location-copy a:not(.button){color:var(--mides-blue);text-decoration:none}
+.office-directions{display:inline-flex;margin-top:10px;padding:12px 16px;background:var(--mides-blue);color:#fff;text-decoration:none;font-size:12px;font-weight:800}
+.office-map-wrap{min-height:320px;overflow:hidden;border-radius:6px;background:#eaf0f4}
+.office-map-wrap iframe{display:block;width:100%;height:100%;min-height:320px;border:0}
+@media(max-width:900px){.local-services-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.office-location{grid-template-columns:1fr}.office-map-wrap,.office-map-wrap iframe{min-height:300px}}
+@media(max-width:560px){.local-services-section{padding:40px 0}.local-services-section .section-heading{align-items:flex-start;flex-direction:column;gap:12px}.local-services-grid{grid-template-columns:1fr}.local-service-card{padding:17px 15px}.office-location{padding:15px}.office-map-wrap,.office-map-wrap iframe{min-height:260px}}
