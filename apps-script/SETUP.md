@@ -50,6 +50,12 @@ El ingreso y la carga de comunicados son operaciones separadas. El panel primero
 14. Verificar también JSONP abriendo la URL de la implementación con `?action=ping&callback=prensaTest`. La respuesta debe comenzar con `prensaTest(` y terminar con `);`. Si aparece solo JSON, HTML o una pantalla de error, la implementación publicada no está usando esta versión de Code.gs o tiene un problema de acceso.
 15. Abrir la sala pública y comprobar que aparecen los comunicados y la agenda. Desde el panel editorial, guardar un borrador de prueba, volver a cargar y confirmar que persiste en Google Sheets. Después eliminar el borrador de prueba desde el panel.
 
+## Publicaciones automáticas de Instagram
+
+La sección social de la portada ya está preparada para consultar las últimas publicaciones de `@mides_florida` mediante la API oficial de Meta. Para activar la conexión, seguir [apps-script/INSTAGRAM-META-SETUP.md](INSTAGRAM-META-SETUP.md). El token se guarda únicamente en las Propiedades de secuencia de comandos como `MIDES_INSTAGRAM_ACCESS_TOKEN`.
+
+Después de actualizar `Code.gs`, ejecutar `probarInstagramFeed` y publicar una Nueva versión de la aplicación web. Esta integración no cambia la autenticación editorial ni las hojas de Google Sheets.
+
 ## Pestañas que administra el sistema
 
 - Comunicados: contenidos editoriales y estados.
