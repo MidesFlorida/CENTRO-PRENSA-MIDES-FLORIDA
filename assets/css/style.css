@@ -273,3 +273,19 @@
 .instagram-feed-more{margin-top:auto;padding-top:5px;font-size:11px;font-weight:800;color:var(--mides-blue)}
 @media(max-width:900px){.instagram-feed-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.instagram-feed-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.instagram-feed-copy{padding:9px}.instagram-feed-caption{font-size:11px}}
+
+
+/* Ajuste de ancho: cada publicación ocupa el ancho útil de su columna social */
+.institutional-social-section .social-feed-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:stretch}
+.institutional-social-section .social-feed-card{width:100%;max-width:100%;min-width:0}
+.institutional-social-section .instagram-feed-grid{grid-template-columns:minmax(0,1fr);gap:12px;padding:12px}
+.institutional-social-section .instagram-feed-item{width:100%;max-width:100%}
+.institutional-social-section .facebook-posts-preview{width:100%;padding:12px}
+.institutional-social-section .facebook-post-embed,.institutional-social-section .facebook-post-embed iframe{width:100%;max-width:100%;min-width:0}
+@media(max-width:850px){
+ .institutional-social-section .social-feed-grid{grid-template-columns:1fr;gap:18px}
+}
+@media(max-width:560px){
+ .institutional-social-section .instagram-feed-grid{padding:8px}
+ .institutional-social-section .facebook-posts-preview{padding:8px}
+}
