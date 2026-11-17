@@ -153,6 +153,32 @@ function instagramFeed_(){
   return result;
 }
 
+
+/** Prueba la conexión sin mostrar ni registrar el token privado. */
+function probarInstagramFeed(){
+  const result=instagramFeed_();
+  const summary={ok:result.ok===true,configured:result.configured===true,publicaciones:Array.isArray(result.items)?result.items.length:0,mensaje:result.message||null};
+  Logger.log(JSON.stringify(summary));
+  return summary;
+}
+
+/** Renueva un token de Instagram de larga duración antes de su vencimiento. */
+function renovarTokenInstagram(){
+  const props=PropertiesService.getScriptProperties();
+  const token=String(props.getProperty('MIDES_INSTAGRAM_ACCESS_TOKEN')||'').trim();
+  if(!token)throw new Error('Falta la propiedad MIDES_INSTAGRAM_ACCESS_TOKEN.');
+  const url='https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token='+encodeURIComponent(token);
+  const response=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true});
+  const status=response.getResponseCode();
+  let data={};try{data=JSON.parse(response.getContentText()||'{}');}catch(err){}
+  if(status<200||status>=300||!data.access_token)throw new Error('Meta no pudo renovar el token. Verificá que siga vigente y que sea de larga duración. HTTP '+status+'.');
+  props.setProperty('MIDES_INSTAGRAM_ACCESS_TOKEN',String(data.access_token));
+  CacheService.getScriptCache().remove('mides_instagram_feed_v1');
+  const result={ok:true,expiresInSeconds:Number(data.expires_in||0),message:'Token renovado y guardado en las propiedades privadas de Apps Script.'};
+  Logger.log(JSON.stringify(result));
+  return result;
+}
+
 function doGet(e){
   let result;
   try{
