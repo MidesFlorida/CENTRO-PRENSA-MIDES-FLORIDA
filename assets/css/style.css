@@ -297,3 +297,19 @@
 @media(max-width:560px){
  .institutional-social-section .facebook-post-embed iframe{height:560px}
 }
+
+
+/* Corrección de estructura de Redes: título arriba y perfiles debajo a ancho completo */
+.institutional-social-section{display:block!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important}
+.institutional-social-section>.section-heading{display:flex;width:100%;margin:0 0 20px;grid-column:1/-1}
+.institutional-social-section>.social-feed-grid{display:grid;width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;grid-column:1/-1}
+.institutional-social-section .social-feed-card{width:100%;min-width:0;max-width:100%}
+.institutional-social-section .instagram-profile-embed,
+.institutional-social-section .instagram-feed-grid{width:100%;min-width:0}
+.institutional-social-section .instagram-profile-embed .instagram-media{width:100%!important;min-width:0!important;max-width:100%!important}
+.institutional-social-section .facebook-posts-preview,
+.institutional-social-section .facebook-post-embed{width:100%;min-width:0;max-width:100%;overflow:hidden}
+.institutional-social-section .facebook-post-embed iframe{display:block;width:100%!important;max-width:100%!important;min-width:0!important}
+@media(max-width:760px){
+ .institutional-social-section>.social-feed-grid{grid-template-columns:minmax(0,1fr)}
+}
