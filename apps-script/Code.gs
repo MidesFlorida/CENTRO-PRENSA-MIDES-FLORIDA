@@ -111,11 +111,54 @@ function setup(){
   Logger.log(JSON.stringify(result,null,2));
   return result;
 }
+
+/**
+ * Devuelve las publicaciones recientes de la cuenta profesional de Instagram MIDES Florida.
+ * El token se guarda exclusivamente en Propiedades de secuencia de comandos.
+ * Nunca se devuelve ni se registra el token en la respuesta pública.
+ */
+function instagramFeed_(){
+  const props=PropertiesService.getScriptProperties();
+  const token=String(props.getProperty('MIDES_INSTAGRAM_ACCESS_TOKEN')||'').trim();
+  if(!token)return {ok:true,configured:false,items:[],message:'La integración de Instagram todavía no fue autorizada.'};
+  const cache=CacheService.getScriptCache();
+  const cached=cache.get('mides_instagram_feed_v1');
+  if(cached){try{return JSON.parse(cached);}catch(ignore){}}
+  const fields='id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,children{media_type,media_url,thumbnail_url}';
+  const url='https://graph.instagram.com/v27.0/me/media?fields='+encodeURIComponent(fields)+'&limit=9&access_token='+encodeURIComponent(token);
+  const response=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true});
+  const status=response.getResponseCode();
+  let payload={};
+  try{payload=JSON.parse(response.getContentText()||'{}');}catch(err){throw new Error('Meta devolvió una respuesta que no se pudo interpretar.');}
+  if(status<200||status>=300||payload.error){
+    const detail=payload.error&&payload.error.message?String(payload.error.message):'HTTP '+status;
+    throw new Error('No se pudieron consultar las publicaciones de Instagram: '+detail);
+  }
+  const items=(Array.isArray(payload.data)?payload.data:[]).map(item=>({
+    id:String(item.id||''),
+    caption:String(item.caption||''),
+    mediaType:String(item.media_type||'IMAGE'),
+    mediaUrl:String(item.media_url||''),
+    thumbnailUrl:String(item.thumbnail_url||''),
+    permalink:String(item.permalink||'https://www.instagram.com/mides_florida/'),
+    timestamp:String(item.timestamp||''),
+    children:item.children&&Array.isArray(item.children.data)?item.children.data.map(child=>({
+      mediaType:String(child.media_type||'IMAGE'),
+      mediaUrl:String(child.media_url||''),
+      thumbnailUrl:String(child.thumbnail_url||'')
+    })): []
+  }));
+  const result={ok:true,configured:true,items:items,updatedAt:new Date().toISOString()};
+  cache.put('mides_instagram_feed_v1',JSON.stringify(result),600);
+  return result;
+}
+
 function doGet(e){
   let result;
   try{
     const a=(e&&e.parameter&&e.parameter.action)||'list';
     if(a==='ping') result={ok:true,service:'Centro de Prensa MIDES Florida'};
+    else if(a==='instagramFeed') result=instagramFeed_();
     else if(a==='list') result={ok:true,items:listPublishedDirect_()};
     else if(a==='upcomingActivities'){
       // Comparar las fechas como hora local de la hoja (Uruguay), no como UTC.
