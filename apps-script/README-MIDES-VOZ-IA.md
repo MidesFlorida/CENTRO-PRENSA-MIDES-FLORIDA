@@ -1,31 +1,30 @@
-# MIDES Voz IA — instalación del servicio
+# MIDES Voz IA — uso con FreeReadText
 
-## Estado
-El panel editorial incluye el módulo de locución. El servicio de síntesis se despliega como una aplicación web independiente de Google Apps Script para que la clave de Azure nunca llegue al navegador.
+## Estado actual
+El panel editorial contiene un módulo de preparación de narraciones. Para evitar una suscripción a Azure, la generación se realiza manualmente en FreeReadText, en una pestaña externa. No se necesita desplegar otro Apps Script, registrar claves API ni modificar el servicio principal del Centro de Prensa.
 
-## 1. Crear el recurso Azure Speech
-1. En Azure Portal, crear un recurso **Speech**.
-2. Copiar una clave y la región exacta del recurso.
-3. Las voces configuradas son `es-UY-MateoNeural` y `es-UY-ValentinaNeural` (español de Uruguay).
+## Cómo utilizarlo
+1. Ingresá al Centro de Prensa con tu clave editorial.
+2. Abrí **07 · MIDES Voz IA**.
+3. Pegá o escribí el texto institucional.
+4. Elegí la voz de referencia: Mateo (masculina) o Valentina (femenina).
+5. Presioná **Copiar texto para narrar**.
+6. Presioná **Abrir FreeReadText** o ingresá a https://freereadtext.com/es.
+7. Pegá el texto, seleccioná español de Uruguay y la voz Mateo o Valentina.
+8. Generá la locución, escuchala y descargá el MP3 para editarlo en tu programa audiovisual.
 
-## 2. Crear el servicio Apps Script
-1. Abrir https://script.google.com/ y crear un proyecto nuevo llamado **MIDES Voz IA**.
-2. Pegar el contenido de `MIDES_VOZ_IA.gs` en el editor.
-3. En **Configuración del proyecto → Propiedades del script**, crear:
-   - `CENTRO_PRENSA_ADMIN_KEY`: la misma clave administrativa que ya utiliza el Centro de Prensa.
-   - `AZURE_SPEECH_KEY`: clave del recurso Azure Speech.
-   - `AZURE_SPEECH_REGION`: región del recurso, por ejemplo `eastus`.
-4. Guardar y desplegar como **Aplicación web**. Ejecutar como propietario. Restringir el acceso según las opciones institucionales disponibles y la política de la organización. Copiar la URL terminada en `/exec`.
+## Límites del plan gratuito
+La página de precios publica 10.000 créditos mensuales y hasta 2.000 caracteres por conversación en el plan gratuito. El servicio informa que admite SSML para controlar pausas, pronunciación y énfasis. Consultá siempre las condiciones vigentes en https://freereadtext.com/es/pricing y https://freereadtext.com/tos.
 
-## 3. Conectar el panel
-En `config.js`, completar `voiceApiUrl` con la URL /exec del nuevo servicio. No colocar la clave de Azure en config.js ni en ningún archivo público.
+## Recomendaciones de locución
+- Usá frases relativamente cortas.
+- Separá ideas con puntos para dar pausas naturales.
+- Escribí números, siglas y horarios de forma que se pronuncien correctamente.
+- Escuchá el resultado completo antes de incorporarlo a un video institucional.
+- No pegues datos personales sensibles, nombres de personas atendidas ni información privada.
 
-## 4. Probar
-Ingresar al panel editorial, abrir **07 · MIDES Voz IA**, escribir un texto breve, probar Mateo y Valentina, y generar MP3. Luego probar WAV.
+## Privacidad y uso institucional
+La generación se realiza en un proveedor externo, no dentro de Google Sheets ni del servidor del Centro de Prensa. Antes de enviar textos institucionales, verificá que su uso esté autorizado por la política de la institución y revisá las condiciones y privacidad del proveedor.
 
-## Seguridad y límites
-- El servicio valida la clave editorial en el servidor.
-- No registrar datos personales sensibles en los textos.
-- Azure Speech puede generar cargos según consumo y región; revisar la tarifa vigente y el presupuesto de Azure antes de producción.
-- La API REST de síntesis tiene un límite de duración por solicitud; para textos largos conviene dividirlos en bloques.
-- El servicio devuelve el audio al navegador para descarga; no lo guarda automáticamente en Drive.
+## Evolución futura
+La conexión automática mediante API solo se implementará si el proveedor ofrece y autoriza expresamente ese uso, y si sus condiciones permiten el uso institucional/comercial requerido. No se automatiza el sitio mediante scraping ni se exponen claves privadas en GitHub Pages.
