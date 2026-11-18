@@ -570,6 +570,8 @@ function doPost(e){
     if(!validarClaveEditorial_(suppliedKey))return apiResponse_(p,{ok:false,error:'Clave editorial incorrecta'});
     // Autenticación rápida: no consulta Sheets ni carga todos los comunicados.
     if(p.action==='auth')return apiResponse_(p,{ok:true,authenticated:true,apiVersion:API_VERSION});
+    if(p.action==='voiceVoices')return apiResponse_(p,{ok:true,voices:voiceList_(p.provider)});
+    if(p.action==='voiceGenerate')return apiResponse_(p,{ok:true,audio:generateVoiceAudio_(p)});
     if(p.action==='adminList'){return apiResponse_(p,{ok:true,items:readAll_().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))});}
     if(p.action==='funcionariosList')return apiResponse_(p,{ok:true,items:listFuncionarios_().map(u=>({id:u.id,nombre:u.nombre,area:u.area,rol:u.rol,color:u.color,estado:u.estado,fechaCreacion:u.fechaCreacion,debeCambiarPassword:u.debeCambiarPassword,fechaCambioPassword:u.fechaCambioPassword,ultimoAcceso:u.ultimoAcceso}))});
     if(p.action==='funcionarioSave')return apiResponse_(p,{ok:true,item:saveFuncionario_(p)});
@@ -834,6 +836,72 @@ function formatDate_(v){if(!v)return '';if(Object.prototype.toString.call(v)==='
 function formatDateTime_(v){if(!v)return '';if(Object.prototype.toString.call(v)==='[object Date]')return Utilities.formatDate(v,Session.getScriptTimeZone(),'yyyy-MM-dd HH:mm:ss');return String(v);}
 // Devuelve JSON normal a clientes compatibles; para cargas de archivos permite confirmar al editor
 // mediante postMessage desde un iframe, sin depender de CORS entre GitHub Pages y Apps Script.
+
+/**
+ * MIDES Voz IA: integración de proveedores TTS con cuotas gratuitas.
+ * TTS.ai usa el endpoint anónimo gratuito (sin API key, hasta 500 caracteres por solicitud).
+ * FreeTTS requiere la propiedad privada FREETTS_API_KEY en Script Properties.
+ * La clave editorial se valida antes de entrar a estas funciones, en doPost.
+ */
+function voiceList_(provider){
+  provider=String(provider||'ttsai').toLowerCase();
+  if(provider==='freetts'){
+    const key=String(PropertiesService.getScriptProperties().getProperty('FREETTS_API_KEY')||'').trim();
+    if(!key)throw new Error('FreeTTS todavía no está configurado. Primero generá una clave gratuita y guardala en Propiedades de secuencia de comandos como FREETTS_API_KEY.');
+    const res=UrlFetchApp.fetch('https://freetts.org/api/voices',{method:'get',headers:{'x-api-key':key},muteHttpExceptions:true});
+    if(res.getResponseCode()<200||res.getResponseCode()>=300)throw new Error('FreeTTS no pudo devolver el catálogo de voces (HTTP '+res.getResponseCode()+').');
+    const data=JSON.parse(res.getContentText()||'[]'),rows=Array.isArray(data)?data:(data.voices||[]);
+    return rows.filter(v=>String(v.Locale||v.locale||'').toLowerCase().startsWith('es')).map(v=>({id:String(v.ShortName||v.id||''),name:String(v.FriendlyName||v.Name||v.name||v.ShortName||v.id||''),gender:String(v.Gender||v.gender||'').toLowerCase(),locale:String(v.Locale||v.locale||'es')})).filter(v=>v.id);
+  }
+  const res=UrlFetchApp.fetch('https://api.tts.ai/v1/voices/?language=es',{method:'get',muteHttpExceptions:true});
+  if(res.getResponseCode()<200||res.getResponseCode()>=300)throw new Error('TTS.ai no pudo devolver el catálogo de voces (HTTP '+res.getResponseCode()+').');
+  const data=JSON.parse(res.getContentText()||'{}'),rows=Array.isArray(data)?data:(data.voices||[]);
+  return rows.filter(v=>String(v.language||v.locale||'').toLowerCase().startsWith('es')).map(v=>({id:String(v.id||''),name:String(v.name||v.id||''),gender:String(v.gender||'').toLowerCase(),locale:String(v.language||'es'),model:String(v.model||'kokoro')})).filter(v=>v.id);
+}
+function splitVoiceText_(value,maxChars){
+  const text=String(value||'').trim(),parts=[];let rest=text;
+  while(rest.length>maxChars){
+    let cut=rest.lastIndexOf(' ',maxChars);
+    const punctuation=Math.max(rest.lastIndexOf('. ',maxChars),rest.lastIndexOf('! ',maxChars),rest.lastIndexOf('? ',maxChars),rest.lastIndexOf('\n',maxChars));
+    if(punctuation>maxChars*0.45)cut=punctuation+1;
+    if(cut<maxChars*0.5)cut=maxChars;
+    parts.push(rest.slice(0,cut).trim());rest=rest.slice(cut).trim();
+  }
+  if(rest)parts.push(rest);
+  return parts;
+}
+function generateVoiceAudio_(p){
+  const provider=String(p.provider||'ttsai').toLowerCase(),text=String(p.text||'').trim(),voice=String(p.voice||'').trim();
+  if(!text)throw new Error('Escribí o cargá un texto antes de generar el audio.');
+  if(!voice)throw new Error('Seleccioná una voz del catálogo.');
+  if(text.length>5000)throw new Error('El texto supera el límite de 5.000 caracteres por generación. Dividilo en partes.');
+  const speed=Math.max(0.5,Math.min(2,Number(p.speed||1))),parts=splitVoiceText_(text,provider==='freetts'?4500:450);
+  const audios=[];
+  parts.forEach((part,index)=>{
+    let response;
+    if(provider==='freetts'){
+      const key=String(PropertiesService.getScriptProperties().getProperty('FREETTS_API_KEY')||'').trim();
+      if(!key)throw new Error('Falta la propiedad privada FREETTS_API_KEY en Apps Script.');
+      const rate=(Math.round((speed-1)*100)>=0?'+':'')+Math.round((speed-1)*100)+'%';
+      const generated=UrlFetchApp.fetch('https://freetts.org/api/v1/tts',{method:'post',contentType:'application/json',headers:{'x-api-key':key},payload:JSON.stringify({text:part,voice:voice,rate:rate,pitch:'+0Hz'}),muteHttpExceptions:true});
+      if(generated.getResponseCode()<200||generated.getResponseCode()>=300)throw new Error('FreeTTS rechazó el texto (HTTP '+generated.getResponseCode()+'): '+generated.getContentText().slice(0,250));
+      const job=JSON.parse(generated.getContentText()||'{}'),fileId=String(job.file_id||'');
+      if(!fileId)throw new Error('FreeTTS no devolvió el identificador del audio.');
+      response=UrlFetchApp.fetch('https://freetts.org/api/audio/'+encodeURIComponent(fileId),{method:'get',muteHttpExceptions:true});
+    }else{
+      const voiceInfo=voice;
+      const generated=UrlFetchApp.fetch('https://api.tts.ai/v1/tts/',{method:'post',contentType:'application/json',payload:JSON.stringify({text:part,voice:voiceInfo,model:String(p.model||'kokoro'),format:'mp3',speed:speed,language:'es'}),muteHttpExceptions:true});
+      response=generated;
+    }
+    const status=response.getResponseCode();
+    if(status<200||status>=300)throw new Error((provider==='freetts'?'FreeTTS':'TTS.ai')+' no pudo generar la parte '+(index+1)+' (HTTP '+status+'). '+response.getContentText().slice(0,250));
+    const blob=response.getBlob(),mime=blob.getContentType()||'audio/mpeg';
+    if(mime.indexOf('json')>=0||mime.indexOf('text')>=0)throw new Error('El proveedor devolvió un mensaje en lugar del MP3: '+response.getContentText().slice(0,250));
+    audios.push(Utilities.base64Encode(blob.getBytes()));
+  });
+  return {provider:provider,mimeType:'audio/mpeg',parts:audios,characters:text.length,partCount:audios.length,filename:'mides-voz-ia-'+Utilities.formatDate(new Date(),Session.getScriptTimeZone(),'yyyyMMdd-HHmmss')+'.mp3'};
+}
+
 function apiResponse_(p,obj){
   const token=String(p&&p.transportToken||'');
   if(p&&p.transport==='iframe'&&/^[A-Za-z0-9_-]{16,100}$/.test(token)){
