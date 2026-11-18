@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  copy.addEventListener("click",async()=>{
   const text=field.value.trim();
   if(!text)return status("Escribí o pegá un texto antes de copiarlo.","error");
-  if(text.length>8000)return status("El texto supera el máximo de 8.000 caracteres.","error");
+  if(text.length>2000)return status("El texto supera el máximo de 8.000 caracteres.","error");
   try{
    await navigator.clipboard.writeText(text);
    $("voice-result").hidden=false;
