@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id);
 let generatedUrl="";
 function status(message,type){const el=$("voice-status");if(el){el.textContent=message;el.className="action-status "+(type||"")}}
-function cleanText(value){const box=document.createElement("div");box.innerHTML=String(value||"");return (box.textContent||box.innerText||"").replace(/\\s+/g," ").trim()}
+function cleanText(value){const box=document.createElement("div");box.innerHTML=String(value||"");return (box.textContent||box.innerText||"").replace(/\s+/g," ").trim()}
 window.loadVoiceStudio=async function(){
  const select=$("voice-publication-select");
  if(select){
