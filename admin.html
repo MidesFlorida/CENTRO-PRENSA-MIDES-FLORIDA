@@ -89,7 +89,7 @@
 <div class="voice-publication-picker"><label for="voice-publication-select"><strong>Usar un comunicado existente</strong><select id="voice-publication-select"><option value="">Seleccioná un comunicado publicado…</option></select></label><button type="button" class="secondary" id="voice-load-publication-btn">Cargar texto del comunicado</button></div>
 <label class="full">Texto para narrar<textarea id="voice-text" rows="10" maxlength="5000" placeholder="Pegá aquí el texto del comunicado o la narración. Máximo 5.000 caracteres por generación."></textarea></label>
 <div class="voice-studio-controls">
-<label>Proveedor<select id="voice-provider"><option value="ttsai">TTS.ai · gratuito sin clave (recomendado)</option><option value="freetts">FreeTTS · requiere clave gratuita</option></select></label>
+<label>Proveedor<select id="voice-provider"><option value="fishaudio" selected>Fish Audio S2.1 Pro · voz más natural (API gratuita)</option><option value="ttsai">TTS.ai · alternativa sin clave</option><option value="freetts">FreeTTS · requiere clave gratuita</option></select></label>
 <label>Tipo de voz<select id="voice-gender"><option value="all">Todas las voces</option><option value="male">Masculina</option><option value="female">Femenina</option></select></label>
 <label>Voz en español<select id="voice-voice"><option value="">Consultando catálogo…</option></select></label>
 <label>Velocidad<select id="voice-rate"><option value="0.9">Pausada</option><option value="1" selected>Natural</option><option value="1.1">Ágil</option></select></label>
@@ -98,11 +98,10 @@
 <div id="voice-status" class="action-status" role="status" aria-live="polite">Cargando voces disponibles…</div>
 <div class="voice-result" id="voice-result"><strong>Audio generado</strong><audio id="voice-audio" controls hidden></audio><a id="voice-download" class="secondary" href="#" download hidden>Descargar MP3</a></div>
 </div>
-<aside class="voice-studio-info"><h3>Proveedores gratuitos</h3>
-<p><strong>TTS.ai</strong><br>Primera opción. API anónima sin clave, modelos gratuitos y salida MP3. El límite documentado sin cuenta es de 500 caracteres por solicitud y 5.000 diarios por IP; el panel divide el texto en fragmentos.</p>
-<p><strong>FreeTTS</strong><br>Alternativa con catálogo amplio y descarga MP3. Requiere una clave API gratuita guardada de forma privada en Apps Script como <code>FREETTS_API_KEY</code>.</p>
-<hr><p class="module-help">Los catálogos se consultan al proveedor en el momento de uso; por eso las voces disponibles pueden cambiar. No se garantiza acento uruguayo: escuchá el resultado antes de utilizarlo.</p>
-<p class="module-help">Las cuotas y licencias gratuitas pueden cambiar. Estas integraciones están pensadas para pruebas y uso personal no comercial. No uses textos con datos personales sensibles o información privada.</p></aside></div></section>
+<aside class="voice-studio-info"><h3>Motor de voz recomendado</h3>
+<p><strong>Fish Audio S2.1 Pro Free</strong><br>Modelo neuronal de generación expresiva. Permite consultar voces públicas en español y producir MP3. Requiere una clave API gratuita, sin tarjeta, guardada únicamente en Apps Script como <code>FISH_API_KEY</code>. La modalidad gratuita está anunciada hasta el 30/11/2026 y sujeta a uso razonable.</p>
+<p><strong>Alternativas</strong><br>TTS.ai funciona sin clave y FreeTTS requiere <code>FREETTS_API_KEY</code>. Se conservan como respaldo.</p>
+<hr><p class="module-help">Fish Audio no garantiza una voz uruguaya específica: elegí una voz española del catálogo y escuchá el resultado. La modalidad gratuita es para pruebas y uso personal no comercial; las solicitudes pueden conservarse para mejorar el modelo. No envíes información privada ni datos sensibles.</p></aside></div></section>
 </section>
 <div id="list-modal" class="modal" hidden><div class="modal-card"><div class="section-heading"><h2>Asignar contactos a lista</h2><button type="button" class="ghost" onclick="closeListModal()">Cerrar</button></div><p id="assignment-summary" class="module-help">Seleccioná una lista existente o creá una nueva.</p><label class="modal-label">Lista existente<select id="assignment-list"><option value="">Seleccionar…</option></select></label><div class="modal-label"><strong>O crear nueva lista</strong><input id="assignment-new-name" placeholder="Ej.: Radios de Florida"></div><label class="modal-label">Descripción<textarea id="assignment-new-description" rows="2" placeholder="Descripción opcional"></textarea></label><div class="form-actions"><button type="button" id="save-assignment-btn" class="secondary">Asignar seleccionados</button></div></div></div></main>
 <div id="notice" class="toast" hidden></div>
@@ -390,6 +389,6 @@ $("admin-prev-month").onclick=()=>{adminAgendaDate=new Date(adminAgendaDate.getF
 // Por seguridad, al recargar la página se solicita nuevamente la clave.
 // No se guarda ni se reconstruye una contraseña administrativa en el navegador.
 </script>
-<script src="assets/js/mides-voz-ia.js?v=20261118-api1"></script>
+<script src="assets/js/mides-voz-ia.js?v=20261118-fishaudio1"></script>
 </body>
 </html>
