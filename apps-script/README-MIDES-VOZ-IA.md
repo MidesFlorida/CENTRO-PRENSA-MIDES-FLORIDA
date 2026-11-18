@@ -1,8 +1,8 @@
 # MIDES Voz IA — generación de MP3 mediante API gratuitas
 
 ## Estado de la integración
-El módulo 07 · MIDES Voz IA del panel editorial ya incorpora:
-- Selección de proveedor: TTS.ai o FreeTTS.
+El módulo 07 · MIDES Voz IA del panel editorial incorpora:
+- Selección de proveedor: Fish Audio S2.1 Pro Free, TTS.ai o FreeTTS.
 - Consulta dinámica de voces en español y filtro por voz masculina/femenina.
 - Carga de comunicados publicados desde Google Sheets.
 - Generación de MP3 desde el panel, reproductor y descarga.
@@ -11,7 +11,25 @@ El módulo 07 · MIDES Voz IA del panel editorial ya incorpora:
 
 La generación se ejecuta desde Apps Script. Las claves privadas nunca se colocan en GitHub Pages ni en el navegador.
 
-## Proveedor recomendado: TTS.ai
+## Proveedor recomendado: Fish Audio S2.1 Pro Free
+- API: https://api.fish.audio/v1/tts
+- Modelo: `s2.1-pro-free`.
+- Catálogo de voces públicas: `GET https://api.fish.audio/model?page_size=50&page_number=1&language=es&sort_by=score`.
+- Generación: `POST https://api.fish.audio/v1/tts`, respuesta MP3 binaria.
+- La API requiere una clave gratuita sin tarjeta. Guardarla en Apps Script → Configuración del proyecto → Propiedades de secuencia de comandos con el nombre `FISH_API_KEY`.
+- El backend envía `reference_id`, `language: es`, `normalize: true` y la velocidad seleccionada. La clave nunca se expone al navegador.
+- Fish Audio anuncia el acceso gratuito de `s2.1-pro-free` hasta el 30/11/2026, sujeto a política de uso razonable; no tiene SLA ni garantía de disponibilidad. Las solicitudes pueden conservarse para mejora del modelo.
+- El nivel gratuito está destinado a pruebas/uso personal no comercial. No usar para publicación institucional, comercial ni distribuir contenido sin revisar la licencia vigente.
+
+Configuración:
+1. Crear una cuenta en https://fish.audio/ y generar una API key en https://fish.audio/app/api-keys.
+2. Abrir el proyecto Apps Script asociado al Centro de Prensa.
+3. En Configuración del proyecto → Propiedades de secuencia de comandos, agregar `FISH_API_KEY` con el valor de la clave.
+4. Guardar. No pegar la clave en GitHub, `config.js` ni `admin.html`.
+
+Documentación: https://docs.fish.audio/ y https://fish.audio/blog/s2-1-pro-free-api/.
+
+## Alternativa: TTS.ai
 - Base: https://api.tts.ai/v1/
 - Catálogo: GET /voices/?language=es
 - Generación: POST /tts/
@@ -27,7 +45,7 @@ Documentación y condiciones:
 
 El catálogo es dinámico: no se fijan nombres de voces que puedan dejar de existir. La disponibilidad de acento uruguayo no está garantizada.
 
-## Alternativa: FreeTTS
+## Alternativa secundaria: FreeTTS
 FreeTTS requiere una clave API gratuita y su endpoint no habilita CORS para llamadas directas desde el navegador. Por eso la llamada se realiza desde Apps Script.
 
 1. Crear una cuenta gratuita en https://freetts.org/.
@@ -60,6 +78,7 @@ No cambiar la propiedad CENTRO_PRENSA_ADMIN_KEY, la URL /exec ni las demás prop
 
 ## Límites y privacidad
 - El módulo limita cada generación a 5.000 caracteres.
+- Fish Audio envía el texto completo (hasta 5.000 caracteres por el límite del panel) en una única solicitud para conservar continuidad de voz.
 - TTS.ai anónimo divide en fragmentos de 450 caracteres; la cuota diaria es compartida por IP según la documentación.
 - FreeTTS utiliza la cuota de la clave gratuita configurada.
 - El audio se recibe en el panel y se descarga en el dispositivo; no se guarda automáticamente en Google Drive ni en Google Sheets.
@@ -68,6 +87,7 @@ No cambiar la propiedad CENTRO_PRENSA_ADMIN_KEY, la URL /exec ni las demás prop
 
 ## Diagnóstico
 - Si el catálogo no carga, confirmar que Apps Script se actualizó con el Code.gs del repositorio y que se conserva la URL /exec.
+- Para Fish Audio, comprobar que FISH_API_KEY existe y es válida; si no aparece catálogo, revisar que la cuenta tenga acceso a voces públicas en español.
 - Para FreeTTS, comprobar que FREETTS_API_KEY existe y es válida.
-- Probar primero TTS.ai, que no requiere clave.
+- TTS.ai sigue disponible como alternativa sin clave.
 - Si el MP3 no se genera, el panel mostrará el error HTTP informado por el proveedor.
