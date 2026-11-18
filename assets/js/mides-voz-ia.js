@@ -13,8 +13,8 @@ window.loadVoiceStudio=function(){
  if(btn&&!btn.dataset.bound){btn.dataset.bound="1";btn.addEventListener("click",()=>{
   const item=published.find(x=>String(x.id)===select.value);
   if(!item)return status("Seleccioná primero un comunicado publicado.","error");
-  const clean=value=>{const box=document.createElement("div");box.innerHTML=String(value||"");return (box.textContent||box.innerText||"").replace(/\\s+/g," ").trim()};
-  const text=[item.titulo,item.resumen,item.contenido].map(clean).filter(Boolean).join("\\n\\n");
+  const clean=value=>{const box=document.createElement("div");box.innerHTML=String(value||"");return (box.textContent||box.innerText||"").replace(/\s+/g," ").trim()};
+  const text=[item.titulo,item.resumen,item.contenido].map(clean).filter(Boolean).join("\n\n");
   $("voice-text").value=text;
   status(text.length>2000?"Comunicado cargado ("+text.length+" caracteres). Supera el límite de 2.000 caracteres de FreeReadText; dividilo o prepará una versión resumida.":"Comunicado cargado desde Google Sheets ("+text.length+" caracteres). Podés editarlo antes de narrar.","success");
  })}
