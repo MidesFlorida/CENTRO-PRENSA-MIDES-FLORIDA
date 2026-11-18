@@ -2,7 +2,7 @@ const grid=document.getElementById("newsGrid"),search=document.getElementById("s
 let items=[];
 const moreButton=document.getElementById("newsMoreButton");
 let showAllNews=false;
-const REQUIRED_API_VERSION="2026-11-16-centro-prensa-v6-drive-parent-fallback";
+const REQUIRED_API_VERSION="2026-11-18-centro-prensa-v7-fish-audio";
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
 function driveFileId(value){
  const raw=String(value||"").trim();if(!raw)return "";
@@ -111,7 +111,7 @@ function requestJsonp(url,action="list"){
 }
 function verifyApiVersion(data){
  // Admite la versión de propiedades manuales y las versiones previas durante el despliegue. Así el sitio no se cae durante el retorno al endpoint anterior.
- const supportedVersions=[REQUIRED_API_VERSION,"2026-10-26-centro-prensa-v4-auth-separated","2026-10-26-centro-prensa-v3-script-properties","2026-10-26-centro-prensa-v2-keyprops","2026-10-26-centro-prensa-v1","2026-10-23-mapa5k-v4"];
+ const supportedVersions=[REQUIRED_API_VERSION,"2026-11-16-centro-prensa-v6-drive-parent-fallback","2026-10-26-centro-prensa-v4-auth-separated","2026-10-26-centro-prensa-v3-script-properties","2026-10-26-centro-prensa-v2-keyprops","2026-10-26-centro-prensa-v1","2026-10-23-mapa5k-v4"];
  if(!data||!supportedVersions.includes(data.apiVersion)||data.jsonpSupported!==true){
   throw new Error("La implementación de Apps Script no tiene una versión compatible. Publicá una Nueva versión desde Implementar → Gestionar implementaciones. Versión actual esperada: "+REQUIRED_API_VERSION+".");
  }
